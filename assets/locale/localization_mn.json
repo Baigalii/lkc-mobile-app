@@ -1,0 +1,21 @@
+{
+  "LOGIN": "НЭВТРЭХ",
+  "key_username": "Хэрэглэгчийн нэр",
+  "key_enter_username": "хэрэглэгчийн нэрээ оруулна уу",
+  "key_password": "Нууц үг",
+  "key_enter_password": "нууц үгээ оруулна уу",
+  "btn_register": "бүртгүүлэх?",
+  "btn_login": "Нэвтрэх",
+  "forget_pass": "нууц үгээ мартсан уу?"
+//  "key_password": "Нууц үг",
+//  "key_must_be_at_least_6_characters": "хамгийн багадаа 6 тэмдэгт оруулна уу",
+//  "key_email": "И-мэйл",
+//  "key_please_enter_valid_email": "И-мэйл хаягаа оруулна уу",
+//  "key_last_name": "Нэр",
+//  "key_enter_last_name": "нэрээ оруулна уу",
+//  "key_first_name": "Овог",
+//  "key_enter_first_name": "овог оруулна уу",
+//  "key_next": "дараагийнх",
+//  "title": "Нутгийн Мэдлэгийн Цөм"
+
+}
