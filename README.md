@@ -1,2 +1,2 @@
 # lkc
-A mobile application
+A mobile application for crowdsourcing Local Knowlegde Core

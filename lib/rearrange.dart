@@ -99,11 +99,11 @@ class _MyHomePageState extends State<MyHomePage> {
       _value = value;
     });
   }
-  void _modifiedWord(String word) {
-    setState(() {
-
-    });
-  }
+//  void _modifiedWord(String word) {
+//    setState(() {
+//
+//    });
+//  }
 
   @override
   Widget build(BuildContext context) {
