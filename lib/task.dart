@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:lkc/allocate.dart';
 import 'package:lkc/modify.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/rearrange.dart';
 import 'package:lkc/performance.dart';
 import 'package:lkc/sort.dart';
@@ -51,20 +51,19 @@ class _HomePageState extends State<HomePage>
     'jpn',
   ];
 
-
   @override
   void initState(){
     super.initState();
     tabController = new TabController(length: 6, vsync: this);
-    _taskType();
+    _taskNumber();
   }
 
-  void _taskType() async {
+  void _taskNumber() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int type = prefs.getInt("t");
-    if(type==1){
-      print("task1 luu orloo");
-      fetchTask(1).then((res) {
+    int type = prefs.getInt("taskNum");
+//    if(type==1){
+      print("task ${type} ruu orloo");
+      fetchTask(type).then((res) {
         setState(() {
           synsetData = res;
           print("synset length:");
@@ -78,78 +77,78 @@ class _HomePageState extends State<HomePage>
           loading = false;
         });
       });
-    }
-    else if(type == 2){
-      print("task2 luu orloo");
-      fetchTask(1).then((res) {
-        setState(() {
-          synsetData = res;
-          synsetData = synsetData.map((synset) {
-            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-              return _x['languageCode'];
-            }).toList();
-            return synset;
-          }).toList();
-          loading = false;
-        });
-      });
-    } else if(type == 3){
-      print("task3 luu orloo");
-      fetchTask(3).then((res) {
-        setState(() {
-          synsetData = res;
-          synsetData = synsetData.map((synset) {
-            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-              return _x['languageCode'];
-            }).toList();
-            return synset;
-          }).toList();
-          loading = false;
-        });
-      });
-    } else if(type == 4){
-      print("task4 luu orloo");
-      fetchTask(4).then((res) {
-        setState(() {
-          synsetData = res;
-          synsetData = synsetData.map((synset) {
-            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-              return _x['languageCode'];
-            }).toList();
-            return synset;
-          }).toList();
-          loading = false;
-        });
-      });
-    } else if(type == 5){
-      print("task5 luu orloo");
-      fetchTask(5).then((res) {
-        setState(() {
-          synsetData = res;
-          synsetData = synsetData.map((synset) {
-            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-              return _x['languageCode'];
-            }).toList();
-            return synset;
-          }).toList();
-          loading = false;
-        });
-      });
-    } else if(type ==6){
-      print("task6 luu orloo");
-      fetchTask(6).then((res) {
-        setState(() {
-          synsetData = res;
-          synsetData = synsetData.map((synset) {
-            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-              return _x['languageCode'];
-            }).toList();
-            return synset;
-          }).toList();
-          loading = false;
-        });
-      });
-    }
+//    }
+//    else if(type == 2){
+//      print("task2 luu orloo");
+//      fetchTask(1).then((res) {
+//        setState(() {
+//          synsetData = res;
+//          synsetData = synsetData.map((synset) {
+//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
+//              return _x['languageCode'];
+//            }).toList();
+//            return synset;
+//          }).toList();
+//          loading = false;
+//        });
+//      });
+//    } else if(type == 3){
+//      print("task3 luu orloo");
+//      fetchTask(3).then((res) {
+//        setState(() {
+//          synsetData = res;
+//          synsetData = synsetData.map((synset) {
+//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
+//              return _x['languageCode'];
+//            }).toList();
+//            return synset;
+//          }).toList();
+//          loading = false;
+//        });
+//      });
+//    } else if(type == 4){
+//      print("task4 luu orloo");
+//      fetchTask(4).then((res) {
+//        setState(() {
+//          synsetData = res;
+//          synsetData = synsetData.map((synset) {
+//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
+//              return _x['languageCode'];
+//            }).toList();
+//            return synset;
+//          }).toList();
+//          loading = false;
+//        });
+//      });
+//    } else if(type == 5){
+//      print("task5 luu orloo");
+//      fetchTask(5).then((res) {
+//        setState(() {
+//          synsetData = res;
+//          synsetData = synsetData.map((synset) {
+//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
+//              return _x['languageCode'];
+//            }).toList();
+//            return synset;
+//          }).toList();
+//          loading = false;
+//        });
+//      });
+//    } else if(type ==6){
+//      print("task6 luu orloo");
+//      fetchTask(6).then((res) {
+//        setState(() {
+//          synsetData = res;
+//          synsetData = synsetData.map((synset) {
+//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
+//              return _x['languageCode'];
+//            }).toList();
+//            return synset;
+//          }).toList();
+//          loading = false;
+//        });
+//      });
+//    }
   }
 
   @override
@@ -254,10 +253,14 @@ class WordGridView extends StatelessWidget {
             if (word[index]['available'] > 0) {
               int gid = word[index]['globalId'];
               SharedPreferences prefs = await SharedPreferences.getInstance();
-              int type = prefs.getInt("t");
+              int type = prefs.getInt("taskNum");
+              String taskId = word[index]['_id'];
               prefs.setInt("gid", gid);
+              prefs.setString("taskID", taskId);
               print("global id:");
               print(gid);
+              print("task id:");
+              print(taskId);
               if(type==1){
                 Navigator.push(context, MaterialPageRoute(builder: (context) => AllocateApp()));
               } else if(type==2){

@@ -1,8 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:lkc/netwoklayer.dart';
-import 'package:lkc/performance.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
+import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:lkc/networklayer.dart';
+import 'package:lkc/performance.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 //Орчуулах
 
@@ -37,8 +41,12 @@ class _MyHomePageState extends State<MyHomePage> {
   List language = [];
   var controller = new TextEditingController();
   var targetWords;
+  var taskId;
   String gloss = '', lemma = '', targetWord = '';
   String _value = 'eng';
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
   List<Map> _values = [
     {'code': 'eng', 'label': 'English'},
     {'code': 'zho', 'label': 'Chinese'},
@@ -48,21 +56,25 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-
   void initState() {
     super.initState();
     _showTranslation();
-
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
   }
 
-  _showTranslation() async{
+  _showTranslation() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int gid = prefs.getInt("gid");
-    fetchTranslation(gid).then((res) {
+    domainId = prefs.getInt("gid");
+    taskNumber = prefs.getInt("taskNum");
+    taskId = prefs.getString("taskID");
+    fetchAllocation(taskNumber,domainId).then((res) {
       setState(() {
         try {
-          if(res['languageCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+          if (res['languageCode'] == 0) {
+            gloss =
+                'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл '
+                'бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
           } else {
             translationWords = res['task']['synset'];
             targetWords = res['task']['targetWords'];
@@ -73,8 +85,8 @@ class _MyHomePageState extends State<MyHomePage> {
             language = codes;
             print("Validation words:");
             print(res['task']['synset']);
-            for(var i in translationWords){
-              if(i['languageCode']==_value){
+            for (var i in translationWords) {
+              if (i['languageCode'] == _value) {
                 lemma = i['lemma'];
                 gloss = i['gloss'];
               }
@@ -87,28 +99,27 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _onChanged(String value){
+  void _onChanged(String value) {
     setState(() {
       _value = value;
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
-
     controller.text = targetWords;
     print('Target Words');
     print(targetWords);
+    DateTime now;
     return Scaffold(
       appBar: AppBar(
           title: Text(widget.title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () =>  Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PerformanceApp()),
-            ),
+            onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PerformanceApp()),
+                ),
           )),
       body: new SingleChildScrollView(
         child: new Column(
@@ -131,29 +142,29 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: DropdownButton(
                 value: _value,
-                items: _values.where((x){
+                items: _values.where((x) {
                   return language.contains(x['code']);
-                }).map((value){
+                }).map((value) {
                   return new DropdownMenuItem(
                     value: value['code'],
                     child: new Row(
                       children: <Widget>[
 //                        new Icon(Icons.language),
-                      _langIcon(value['code'].toString()),
+                        _langIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
                   );
                 }).toList(),
-                onChanged: (value){
-                  for(var item in translationWords){
-                    if(item['languageCode']==value){
+                onChanged: (value) {
+                  for (var item in translationWords) {
+                    if (item['languageCode'] == value) {
                       lemma = item['lemma'];
                       gloss = item['gloss'];
                     }
                   }
                   _onChanged(value);
-                  },
+                },
               ),
             ),
             Padding(
@@ -161,14 +172,20 @@ class _MyHomePageState extends State<MyHomePage> {
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Text(lemma.toLowerCase(), style: TextStyle(
-                    fontSize: 17.0,
-                    fontWeight: FontWeight.bold,),
+                  Text(
+                    lemma.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text(gloss.toLowerCase(), style: TextStyle(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.bold,
-                  ),),
+                  Text(
+                    gloss.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -181,23 +198,16 @@ class _MyHomePageState extends State<MyHomePage> {
 //                      Icons.exit_to_app
 //                  ),
 //                ),
-              Padding(
-                padding: EdgeInsets.all(20.0),
-                child: TextField(
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(5.0),
-                      )
+                Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: TextField(
+                    decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(5.0),
+                    )),
+                    controller: controller,
                   ),
-                  controller: controller,
                 ),
-              ),
-
-//                Padding(
-//                  padding: EdgeInsets.all(20.0),
-//                  child:  new Text(targetWords, style: TextStyle(), ),
-//                ),
-
               ],
             ),
             Row(
@@ -205,32 +215,30 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 new Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                    child: new Theme(
-                      data: new ThemeData(
-                          hintColor: Colors.black
-                      ),
-                      child: new TextField(
-                        decoration: InputDecoration(
-                          labelText: 'Тайлбар оруулах хэсэг*',
-                          hintText: 'Энэ хэсэгт орчуулсан үгээ оруулна уу...',
-                          hintStyle: TextStyle(color: Colors.grey),
-                          helperText: 'Санамж: зөвхөн тайлбарыг орчуулна',
-                          suffixIcon: const Icon(
-                            Icons.create,
-                            color: Colors.black,
+                      padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                      child: new Theme(
+                        data: new ThemeData(hintColor: Colors.black),
+                        child: new TextField(
+                          decoration: InputDecoration(
+                            labelText: 'Тайлбар оруулах хэсэг*',
+                            hintText: 'Энэ хэсэгт орчуулсан үгээ оруулна уу...',
+                            hintStyle: TextStyle(color: Colors.grey),
+                            helperText: 'Санамж: зөвхөн тайлбарыг орчуулна',
+                            suffixIcon: const Icon(
+                              Icons.create,
+                              color: Colors.black,
+                            ),
+                            enabledBorder: const OutlineInputBorder(
+                              borderSide: const BorderSide(
+                                  color: Colors.indigo, width: 0.0),
+                            ),
+                            border: new OutlineInputBorder(
+                              borderSide: new BorderSide(color: Colors.red),
+                            ),
                           ),
-                          enabledBorder: const OutlineInputBorder(
-                            borderSide: const BorderSide(color: Colors.indigo, width: 0.0),
-                          ),
-                          border: new OutlineInputBorder(
-                            borderSide: new BorderSide(color: Colors.red),
-                          ),
+                          maxLength: 256,
                         ),
-                        maxLength: 256,
-                      ),
-                    )
-                  ),
+                      )),
                 ),
               ],
             ),
@@ -241,13 +249,20 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(left: 10.0),
-                  child: new  FlatButton(
+                  child: new FlatButton(
                     onPressed: () => {},
                     padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
+                    child: Row(
+                      // Replace with a Row for horizontal icon + text
                       children: <Widget>[
-                        Text("Алгасах", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.skip_next, color: Colors.indigo,)
+                        Text(
+                          "Алгасах",
+                          style: TextStyle(color: Colors.indigo),
+                        ),
+                        Icon(
+                          Icons.skip_next,
+                          color: Colors.indigo,
+                        )
                       ],
                     ),
                   ),
@@ -255,12 +270,25 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 100.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: (){
+                        if (controller.text == " ") {
+                        Fluttertoast.showToast(msg: "Илгээх өгөгдөл байхгүй байна!");
+                        } else {
+                          _sendButton();
+                        }
+                    },
                     padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
+                    child: Row(
+                      // Replace with a Row for horizontal icon + text
                       children: <Widget>[
-                        Text("Илгээх", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.send, color: Colors.indigo,)
+                        Text(
+                          "Илгээх",
+                          style: TextStyle(color: Colors.indigo),
+                        ),
+                        Icon(
+                          Icons.send,
+                          color: Colors.indigo,
+                        )
                       ],
                     ),
                   ),
@@ -272,21 +300,74 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+  void _sendButton() async {
+      DateTime now = DateTime.now();
+      endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      //2019-04-30T07:24:53.887Z
+
+      Map data = {
+        'taskId': "${taskId}",
+        'domainId': "${domainId}",
+        'start_date': "${startDate}",
+        'end_date': "${endDate}",
+        'translation': "${controller.text}",
+        'translationType': "GlossTranslation",
+      };
+
+      var body = jsonEncode(data);
+      print(body);
+      var prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token');
+      var url = "http://lkc.num.edu.mn/translation";
+//      http.post(url,
+//          headers: {'Content-Type': 'application/json', 'Authorization': token},
+//          body: body
+//      )
+//          .then((response) async {
+//        print("Response status: ${response.statusCode}");
+//        print("Response body: ${response.body}");
+//      });
+    }
 }
 
+
 _langIcon(String value) {
-  if(value=='eng'){
-    return new Image(image: new AssetImage('images/united-kingdom.png'), width: 25, height: 25,);
-  } else if(value=='zho'){
-    return new Image(image: new AssetImage('images/china.png'), width: 25, height: 25,);
-  } else if(value=='deu'){
-    return new Image(image: new AssetImage('images/germany.png'), width: 25, height: 25,);
-  } else if(value=='fra'){
-    return new Image(image: new AssetImage('images/france.png'), width: 25, height: 25,);
-  } else if(value=='rus'){
-    return new Image(image: new AssetImage('images/russia.png'), width: 25, height: 25,);
-  } else if(value=='jpn'){
-    return new Image(image: new AssetImage('images/japan.png'), width: 25, height: 25,);
+  if (value == 'eng') {
+    return new Image(
+      image: new AssetImage('images/united-kingdom.png'),
+      width: 25,
+      height: 25,
+    );
+  } else if (value == 'zho') {
+    return new Image(
+      image: new AssetImage('images/china.png'),
+      width: 25,
+      height: 25,
+    );
+  } else if (value == 'deu') {
+    return new Image(
+      image: new AssetImage('images/germany.png'),
+      width: 25,
+      height: 25,
+    );
+  } else if (value == 'fra') {
+    return new Image(
+      image: new AssetImage('images/france.png'),
+      width: 25,
+      height: 25,
+    );
+  } else if (value == 'rus') {
+    return new Image(
+      image: new AssetImage('images/russia.png'),
+      width: 25,
+      height: 25,
+    );
+  } else if (value == 'jpn') {
+    return new Image(
+      image: new AssetImage('images/japan.png'),
+      width: 25,
+      height: 25,
+    );
   }
 }
 
@@ -321,7 +402,7 @@ class StarRating extends StatelessWidget {
     }
     return new InkResponse(
       onTap:
-      onRatingChanged == null ? null : () => onRatingChanged(index + 1.0),
+          onRatingChanged == null ? null : () => onRatingChanged(index + 1.0),
       child: icon,
     );
   }
@@ -330,6 +411,6 @@ class StarRating extends StatelessWidget {
   Widget build(BuildContext context) {
     return new Row(
         children:
-        new List.generate(starCount, (index) => buildStar(context, index)));
+            new List.generate(starCount, (index) => buildStar(context, index)));
   }
 }

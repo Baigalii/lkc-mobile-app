@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:intl/intl.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
+import 'package:http/http.dart' as http;
 import 'package:draggable_flutter_list/draggable_flutter_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,6 +37,10 @@ class _MyHomePageState extends State<MyHomePage> {
   List sortWords = [];
   List modifiedGlosses = [];
   List language = [];
+  var taskId;
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
   String gloss = '', lemma = '';
   String _value = 'eng';
   List<Map> _values = [
@@ -48,16 +54,20 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _showSort();
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);
   }
 
   _showSort() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int gid = prefs.getInt("gid");
-    fetchSort(gid).then((res) {
+    domainId = prefs.getInt("gid");
+    taskNumber = prefs.getInt("taskNum");
+    fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         try {
           if(res['languageCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
           } else {
             sortWords = res['task']['synset'];
             modifiedGlosses = res['task']['modifiedGlosses'];
@@ -214,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Padding(
                   padding: EdgeInsets.only(left: 150.0, right: 10.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: _sendButton,
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -229,6 +239,30 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
     );
+  }
+  _sendButton()async{
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'validationType': "GlossValidation",
+      'validations': " ",
+    };
+    print(obj);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/validation";
+    http.post(url, body: obj, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    })
+        .then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
   }
 }
 

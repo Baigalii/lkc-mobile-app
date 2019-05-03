@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:intl/intl.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
 import 'package:lkc/synset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -36,14 +37,18 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   List<String> _words = [];
   List<TextEditingController> _controllers = [];
-
-//  TextEditingController _controllerModified = new TextEditingController();
   List<TextEditingController> _controllerModified = [];
+  TextEditingController _textFieldController = TextEditingController();
   List rearrangeWords = [];
   List translatedWords = [];
   List language = [];
   double rating = 3.5;
-
+  var taskId;
+  var preWord = [];
+  var postWord = [];
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
   String gloss = '', lemma = '';
   String _value = 'eng';
   List<Map> _values = [
@@ -58,17 +63,27 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _showModification();
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    setState(() {
+      _controllers.add(new TextEditingController());
+    });
 
   }
 
   _showModification() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int gid = prefs.getInt("gid");
-    fetchModification(gid).then((res) {
+    domainId = prefs.getInt("gid");
+    taskNumber = prefs.getInt('taskNum');
+    taskId = prefs.getString("taskID");
+    print("Task type number");
+    fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         try {
           if(res['statusCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+                'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
+                ' Өөр айд шилжинэ үү.';
           } else {
             rearrangeWords = res['task']['synset'];
             translatedWords = res['task']['translatedWords'];
@@ -84,7 +99,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 lemma = i['lemma'];
                 gloss = i['gloss'];
               }
-
+            }
+            for(var i=0; i<translatedWords.length; i++){
+              _controllers[i] = translatedWords[i]['word'];
             }
           }
         } catch (e) {
@@ -118,15 +135,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           )
       ),
-//      floatingActionButton: FloatingActionButton(
-//        onPressed: (){
-//          setState(() {
-//            _words.add('');
-//            _controllers.add(TextEditingController());
-//          });
-//        },
-//        child: Icon(Icons.add),
-//      ),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
@@ -156,7 +164,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: new Row(
                       children: <Widget>[
                         _langIcon(value['code'].toString()),
-//                        new Icon(Icons.language),
                         new Text('  ${value['label']}'),
                       ],
                     ),
@@ -171,7 +178,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
                   _onChanged(value);
                 },
-
               ),
             ),
             Padding(
@@ -183,7 +189,6 @@ class _MyHomePageState extends State<MyHomePage> {
                     fontSize: 17.0,
                     fontWeight: FontWeight.bold,
                   ),
-                    
                   ),
                   Text(gloss.toLowerCase(), style: TextStyle(
                     fontSize: 12.0,
@@ -206,7 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 5.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: () => _showDialog(context),
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -234,7 +239,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 10.0, right: 5.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: _sendButton,
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -251,6 +256,63 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+  _showDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text('GAP (дүйцэлгүй ойлголт)', style: TextStyle(color: Colors.indigo, fontSize: 15.0),),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: InputDecoration(hintText: "GAP гэж үзсэн шалтгаан?", hintStyle: TextStyle(fontSize: 15.0)),
+            ),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text('OK'),
+                onPressed: () async{
+                  var modificationGap = [];
+                  modificationGap.add({
+                    'preWord': "GAP",
+                    'postWord': "GAP",
+                  });
+
+                  DateTime now = DateTime.now();
+                  endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+                  var obj = jsonEncode({
+                    'taskId': "${taskId}",
+                    'domainId': "${domainId}",
+                    'gap': "true",
+                    'gapReason': "${_textFieldController.text}",
+                    'start_date': "${startDate}",
+                    'end_date': "${endDate}",
+                    'modification': modificationGap,
+                  });
+                  print(obj);
+                  var prefs = await SharedPreferences.getInstance();
+                  var token = prefs.getString('token');
+                  var url = "http://lkc.num.edu.mn/modification";
+                  http.post(url, body: obj, headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token,
+                  }).then((response) async {
+                    print("Response status: ${response.statusCode}");
+                    print("Response body: ${response.body}");
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              new FlatButton(
+                child: new Text('CANCEL'),
+                onPressed: (){
+                  Navigator.pop(context);
+                },
+              )
+
+            ],
+          );
+        });
+  }
   _buildWords(BuildContext context) {
     var children = <Widget>[];
     for (var i=0; i < translatedWords.length; i++) {
@@ -261,61 +323,96 @@ class _MyHomePageState extends State<MyHomePage> {
       children.add(Column(
         children: <Widget>[
           Padding(
-              padding: EdgeInsets.only(left: 20.0, right: 20.0),
-              child: new TextField(
-               enabled: false,
-                decoration: InputDecoration(
-                  labelText: '',
-                  hintText: '',
-                  hintStyle: TextStyle(color: Colors.grey),
-                ),
-                controller: controller,
+            padding: EdgeInsets.only(left: 20.0, right: 20.0),
+            child: new TextField(
+              enabled: false,
+              decoration: InputDecoration(
+                labelText: '',
+                hintText: '',
+                hintStyle: TextStyle(color: Colors.grey),
               ),
+              controller: controller,
             ),
+          ),
 
           Row(
             children: <Widget>[
               Expanded(
-                child: Padding(
-                padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                child: new TextField(
-                    decoration: InputDecoration(
-                      suffix:  IconButton(
-                        icon: Icon(Icons.spellcheck),
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                    child: new TextField(
+                      decoration: InputDecoration(
+                        suffix:  IconButton(
+                          icon: Icon(Icons.spellcheck),
                           onPressed: (){
                             print('spellcheck pressed');
                             print(controllerModified.text = translatedWords[i]['word']);
                             controllerModified.text = translatedWords[i]['word'];
                           },
+                        ),
+                        fillColor: Colors.blueAccent,
+                        labelText: '',
+                        hintText: 'Засвар үг',
+                        hintStyle: TextStyle(color: Colors.grey),
                       ),
-                      fillColor: Colors.blueAccent,
-                      labelText: '',
-                      hintText: 'Засвар үг',
-                      hintStyle: TextStyle(color: Colors.grey),
+                      controller: controllerModified,
                     ),
-                    controller: controllerModified,
-                ),
-                )
+                  )
               ),
               IconButton(
-                  padding: EdgeInsets.only(left: 20.0, right: 20),
-                  color: Colors.red,
-                  icon: Icon(Icons.remove_circle),
-                  alignment: Alignment.bottomLeft,
-                  onPressed: () {
-                    setState(() {
-                      print(i);
-                      _words.removeAt(i);
-                      _controllers.removeAt(i);
-                    });
-                  },
-                ),
+                padding: EdgeInsets.only(left: 20.0, right: 20),
+                color: Colors.red,
+                icon: Icon(Icons.remove_circle),
+                alignment: Alignment.bottomLeft,
+                onPressed: () {
+                  setState(() {
+                    print(i);
+                    _words.removeAt(i);
+                    _controllers.removeAt(i);
+                  });
+                },
+              ),
             ],
           ),
         ],
       ));
     }
     return children;
+  }
+
+  _sendButton() async{
+    var modificationWords = [];
+    for (var i = 0; i < translatedWords.length; i++) {
+      modificationWords.add({
+        'preWord': translatedWords[i]['word'],
+        'postWord': _controllerModified[i].text,
+      });
+    }
+    print("_controllers.length: ");
+    print(_controllers.length);
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'modification': modificationWords,
+    };
+    var body = jsonEncode(obj);
+    print(obj);
+//    var prefs = await SharedPreferences.getInstance();
+//    var token = prefs.getString('token');
+//    var url = "http://lkc.num.edu.mn/modification";
+//    http.post(url, body: body, headers: {
+//      'Content-Type': 'application/json',
+//      'Authorization': token,
+//    })
+//        .then((response) async {
+//      print("Response status: ${response.statusCode}");
+//      print("Response body: ${response.body}");
+//    });
   }
 }
 

@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:lkc/login.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/task.dart';
 import 'package:http/http.dart' as http;
 import 'package:rich_alert/rich_alert.dart';
@@ -408,7 +408,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
    _taskType(int t) async{
      SharedPreferences prefs = await SharedPreferences.getInstance();
-     prefs.setInt("t", t );
+     prefs.setInt("taskNum", t );
    }
 }
 

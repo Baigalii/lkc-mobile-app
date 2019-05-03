@@ -1,6 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 //Үнэлэх
@@ -33,15 +38,17 @@ class _MyHomePageState extends State<MyHomePage> {
   double rating = 3.5;
   int radioValue;
 
-  List correct = [];
-  List wrong = [];
-  List unfamiliar = [];
   List language = [];
 
   List<TextEditingController> txtController = [];
+  TextEditingController _textFieldController = TextEditingController();
   List validationWords = [];
   List modifiedWords = [];
   List _ratings= [];
+  var taskId;
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
   String gloss = '', lemma = '';
   String _value = 'eng';
   List<Map> _values = [
@@ -57,16 +64,21 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _showValidation();
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
   }
 
   _showValidation() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int gid = prefs.getInt("gid");
-    fetchValidation(gid).then((res) {
+    domainId = prefs.getInt("gid");
+    taskNumber = prefs.getInt("taskNum");
+    taskId = prefs.getString("taskID");
+    fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         try {
           if(res['statusCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
           } else {
             validationWords = res['task']['synset'];
             modifiedWords = res['task']['modifiedWords'];
@@ -190,7 +202,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 5.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: () => _showDialog(context),
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -218,7 +230,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 10.0, right: 5.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: _sendButton,
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -234,6 +246,68 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+
+  _showDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              'GAP (дүйцэлгүй ойлголт)',
+              style: TextStyle(color: Colors.indigo, fontSize: 15.0),
+            ),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: InputDecoration(
+                  hintText: "GAP гэж үзсэн шалтгаан?",
+                  hintStyle: TextStyle(fontSize: 15.0)),
+            ),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text('OK'),
+                onPressed: () async{
+                  var validationsGap = [];
+                  validationsGap.add({
+                    'words': "GAP",
+                    'rating': 5,
+                  });
+
+                  DateTime now = DateTime.now();
+                  endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+                  var obj = jsonEncode({
+                    'taskId': "${taskId}",
+                    'domainId': "${domainId}",
+                    'gap': "true",
+                    'gapReason': "${_textFieldController.text}",
+                    'start_date': "${startDate}",
+                    'end_date': "${endDate}",
+                    'validations': validationsGap,
+                  });
+                  print(obj);
+                  var prefs = await SharedPreferences.getInstance();
+                  var token = prefs.getString('token');
+                  var url = "http://lkc.num.edu.mn/validation";
+                  http.post(url, body: obj, headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token,
+                  }).then((response) async {
+                    print("Response status: ${response.statusCode}");
+                    print("Response body: ${response.body}");
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              new FlatButton(
+                child: new Text('CANCEL'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              )
+            ],
+          );
+        });
   }
 
   void something(int e){
@@ -347,6 +421,38 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return children;
   }
+
+  _sendButton() async{
+    var validationWords = [];
+    for (var i = 0; i < modifiedWords.length; i++) {
+      validationWords.add({
+        'lemma': modifiedWords[i]['word'],
+        'rating': _ratings[i],
+      });
+    }
+
+      DateTime now = DateTime.now();
+      endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      Map obj = {
+        'taskId': "${taskId}",
+        'domainId': "${domainId}",
+        'start_date': "${startDate}",
+        'end_date': "${endDate}",
+        'validations': validationWords,
+      };
+      print(obj);
+//    var prefs = await SharedPreferences.getInstance();
+//    var token = prefs.getString('token');
+//    var url = "http://lkc.num.edu.mn/validation";
+//    http.post(url, body: obj, headers: {
+//      'Content-Type': 'application/json',
+//      'Authorization': token,
+//    })
+//        .then((response) async {
+//      print("Response status: ${response.statusCode}");
+//      print("Response body: ${response.body}");
+//    });
+    }
 }
 
 _langIcon(String value) {

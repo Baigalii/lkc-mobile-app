@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:lkc/words.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:lkc/networklayer.dart';
 
 void main() => runApp(new MyApp());
 

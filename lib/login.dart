@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:lkc/guidelines.dart';
 import 'package:lkc/localization/app_translations.dart';
 import 'package:lkc/localization/application.dart';
 import 'package:lkc/localization/application.dart';
@@ -53,7 +54,7 @@ class ChoiceOfMenu {
 List<ChoiceOfMenu> choices = <ChoiceOfMenu>[
   new ChoiceOfMenu(title: ' Төсөл', icon: Icons.info),
 //  new ChoiceOfMenu(title: 'Оролцох', icon: Icons.translate),
-  new ChoiceOfMenu(title: ' Нийтлэл', icon: Icons.public),
+  new ChoiceOfMenu(title: ' Нутагшуулалт', icon: Icons.public),
   new ChoiceOfMenu(title: ' Нэвтрэх', icon: Icons.lock_open),
   new ChoiceOfMenu(title: ' Бүртгүүлэх', icon: Icons.fingerprint),
   new ChoiceOfMenu(title: ' Хэл солих', icon: Icons.language),
@@ -103,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
     else if (choice.icon == Icons.public) {
       print("Niitlel heseg ruu orloo");
       Navigator.push(
-          context, MaterialPageRoute(builder: (context) => PublicationsApp()));
+          context, MaterialPageRoute(builder: (context) => GuidelineApp()));
     } else if (choice.icon == Icons.lock_open) {
       print("Nevtreh heseg ruu orloo");
       Navigator.push(
@@ -322,10 +323,12 @@ class _MyHomePageState extends State<MyHomePage> {
           MaterialPageRoute(
               builder: (context) => PerformanceApp()),
         );
-      } else {showDialog(
+      } else {
+        showDialog(
               context: context,
               builder: (BuildContext context) {
-              return RichAlertDialog( //uses the custom alert dialog
+              return RichAlertDialog(
+                //uses the custom alert dialog
                 alertTitle: richTitle("Хэрэглэгч олдсонгүй!"),
                 alertSubtitle: richSubtitle(""),
                 alertType: RichAlertType.WARNING,

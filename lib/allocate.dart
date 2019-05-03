@@ -1,17 +1,18 @@
 import 'dart:convert';
 //import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:lkc/performance.dart';
-import 'package:lkc/synset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:lkc/previous.dart';
 import 'package:giffy_dialog/giffy_dialog.dart';
 import 'package:http/http.dart' as http;
 import 'package:smooth_star_rating/smooth_star_rating.dart';
-import 'package:toast/toast.dart';
 import 'package:flutter/rendering.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+
 
 //Үг оноох
 
@@ -43,13 +44,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   List<String> _words = [];
   List<TextEditingController> _controllers = [];
   List<SmoothStarRating> _star = [];
+  TextEditingController _textFieldController = TextEditingController();
   List provideWords = [];
   List language = [];
   bool _validate = false;
 
   List<double> ratings = [];
-//  double rating = 0;
+  var taskId;
 
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
   String gloss = '', lemma = '';
   String _value = 'eng';
   List<Map> _values = [
@@ -65,23 +70,28 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _showTranslation();
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     setState(() {
       _star.add(SmoothStarRating());
       _words.add('');
       _controllers.add(new TextEditingController());
       ratings.add(0);
     });
+
   }
 
   _showTranslation() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int gid = prefs.getInt("gid");
-    fetchAllocation(gid).then((res) {
+    taskNumber = prefs.getInt("taskNum");
+    domainId = prefs.getInt("gid");
+    taskId = prefs.getString("taskID");
+    fetchAllocation(taskNumber,domainId).then((res) {
       setState(() {
         try {
           if (res['statusCode'] == 0) {
-            gloss =
-                'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
           } else {
             provideWords = res['task']['synset'];
             var t = res['task']['synset'] as List;
@@ -108,11 +118,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       _value = value;
     });
   }
-//
-//  @override
-//  void dispose() {
-//    super.dispose();
-//  }
 
   @override
   Widget build(BuildContext context) {
@@ -133,25 +138,25 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           IconButton(
             icon: Icon(Icons.live_help),
             tooltip: 'Ажлын заавар',
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  builder: (_) => FlareGiffyDialog(
-                        flarePath: 'assets/space_demo.flr',
-                        flareAnimation: 'loading',
-                        title: Text(
-                          'Ажлын заавар',
-                          style: TextStyle(
-                              fontSize: 22.0, fontWeight: FontWeight.w600),
-                        ),
-                        description: new Text(
-                          'Бид таны оруулсан хувь нэмрийг Монгол НМЦ үүсгэхэд ашиглах болно. Танд баярлалаа.',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(),
-                        ),
-                        onOkButtonPressed: () {},
-                      ));
-            },
+//            onPressed: () {
+//              showDialog(
+//                  context: context,
+//                  builder: (_) => FlareGiffyDialog(
+//                        flarePath: 'assets/space_demo.flr',
+//                        flareAnimation: 'loading',
+//                        title: Text(
+//                          'Ажлын заавар',
+//                          style: TextStyle(
+//                              fontSize: 22.0, fontWeight: FontWeight.w600),
+//                        ),
+//                        description: new Text(
+//                          'Бид таны оруулсан хувь нэмрийг Монгол НМЦ үүсгэхэд ашиглах болно. Танд баярлалаа.',
+//                          textAlign: TextAlign.center,
+//                          style: TextStyle(),
+//                        ),
+//                        onOkButtonPressed: () {},
+//                      ));
+//            },
           ),
         ],
       ),
@@ -269,6 +274,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ),
                 Expanded(
                   child: FlatButton(
+                    padding: EdgeInsets.only(left: 80.0),
                     onPressed: _skipButton,
                     //padding: EdgeInsets.all(10.0),
                     child: Row(
@@ -291,57 +297,44 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: FlatButton(
-//                  onPressed: _showDialog,
-                    splashColor: Colors.indigo,
-                    child: Row(
-                      // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Icon(
-                          Icons.event_busy,
-                          color: Colors.indigo,
-                        ),
-                        Text(
-                          "GAP",
-                          style: TextStyle(color: Colors.indigo),
-                        ),
-                      ],
+                  child: Center(
+                    child: FlatButton(
+                      onPressed: () => _showDialog(context),
+                      splashColor: Colors.indigo,
+                      child: Row(
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Icon(
+                            Icons.event_busy,
+                            color: Colors.indigo,
+                          ),
+                          Text(
+                            "GAP",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
                 Expanded(
-                  child: FlatButton(
-                    onPressed: () {
-                      Map obj = {
-                        'taskId': 123, 'domainId': 124, 'start_date': '132123', 'end_date': '23345',
-                        'translation': [
-                          { 'lemma': 'asd', 'rating': 4 },
-                          { 'lemma': 'wer', 'rating': 5 },
+                  child: Center(
+                    child: FlatButton(
+                      padding: EdgeInsets.only(left: 80.0),
+                      onPressed: _sendButton,
+                      child: Row(
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "Илгээх",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                          Icon(
+                            Icons.send,
+                            color: Colors.indigo,
+                          )
                         ],
-                      };
-                      print(obj);
-
-                      return;
-                      setState(() {
-                        for (var i = 0; i <= _controllers.length; i++) {
-                          _controllers[i].text.isEmpty
-                              ? _validate = true
-                              : _validate = false;
-                        }
-                      });
-                    },
-                    child: Row(
-                      // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
-                          "Илгээх",
-                          style: TextStyle(color: Colors.indigo),
-                        ),
-                        Icon(
-                          Icons.send,
-                          color: Colors.indigo,
-                        )
-                      ],
+                      ),
                     ),
                   ),
                 ),
@@ -350,18 +343,69 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
           ],
         ),
       ),
-//        bottomNavigationBar: CurvedNavigationBar(
-//          backgroundColor: Colors.blueAccent,
-//            items: <Widget>[
-//                Icon(Icons.add, size: 20),
-//                Icon(Icons.list, size: 30),
-//                Icon(Icons.compare_arrows, size: 30),
-//                ],
-//            onTap: (index) {
-//            //Handle button tap
-//          },
-//        ),
     );
+  }
+
+  _showDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: Text(
+              'GAP (дүйцэлгүй ойлголт)',
+              style: TextStyle(color: Colors.indigo, fontSize: 15.0),
+            ),
+            content: TextField(
+              controller: _textFieldController,
+              decoration: InputDecoration(
+                  hintText: "GAP гэж үзсэн шалтгаан?",
+                  hintStyle: TextStyle(fontSize: 15.0)),
+            ),
+            actions: <Widget>[
+              new FlatButton(
+                child: new Text('OK'),
+                onPressed: () async{
+                  var translationGap = [];
+                    translationGap.add({
+                      'lemma': "GAP",
+                      'rating': 5,
+                    });
+
+                  DateTime now = DateTime.now();
+                  endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+                  var obj = jsonEncode({
+                    'taskId': "${taskId}",
+                    'domainId': "${domainId}",
+                    'gap': "true",
+                    'gapReason': "${_textFieldController.text}",
+                    'start_date': "${startDate}",
+                    'end_date': "${endDate}",
+                    'translation': translationGap,
+                  });
+                  print(obj);
+                  var prefs = await SharedPreferences.getInstance();
+                  var token = prefs.getString('token');
+                  var url = "http://lkc.num.edu.mn/translation";
+                  http.post(url, body: obj, headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': token,
+                  }).then((response) async {
+                    print("Response status: ${response.statusCode}");
+                    print("Response body: ${response.body}");
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              new FlatButton(
+                child: new Text('CANCEL'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              )
+            ],
+          );
+        });
   }
 
   _langIcon(String value) {
@@ -424,30 +468,33 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                           _validate ? 'Илгээх өгөгдөл байхгүй байна!' : null,
                       suffix: IconButton(
                         icon: Icon(Icons.cancel),
-//                  onPressed: _onClear,
                       ),
-//                border: new OutlineInputBorder(
-//                  borderSide: new BorderSide(color: Colors.blueAccent),
-//                ),
                     ),
                     controller: _controllers[i],
                   ),
                 ),
               ),
               Padding(
-                padding: EdgeInsets.only( right: 20.0),
+                padding: EdgeInsets.only(right: 20.0),
                 child: IconButton(
                   alignment: Alignment.bottomRight,
                   color: Colors.indigo,
                   iconSize: 35.0,
                   icon: Icon(Icons.add_circle_outline),
                   onPressed: () {
-                    setState(() {
-                      print(i);
-                      _words.add('');
-                      _controllers.add(TextEditingController());
-                      ratings.add(0);
-                    });
+                    if(_controllers[i].text == "") {
+                      Fluttertoast.showToast(msg: "Үгээ оруулна уу!");
+                    }
+                    else if(_controllers[i].text != "" && ratings[i]<=0){
+                      Fluttertoast.showToast(msg: "Өөрийн үнэлгээгээ дарна уу!");
+                    }else {
+                      setState(() {
+                        print(i);
+                        _words.add('');
+                        _controllers.add(TextEditingController());
+                        ratings.add(0);
+                      });
+                    }
                   },
                 ),
               ),
@@ -474,11 +521,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 color: Colors.red,
                 icon: Icon(Icons.remove_circle),
                 onPressed: () {
-                  setState(() {
-                    print(i);
-                    _words.removeAt(i);
-                    _controllers.removeAt(i);
-                  });
+                  if(_controllers.length==1){
+                    Fluttertoast.showToast(msg: "Bolohgui ee");
+                  } else {
+                    setState(() {
+                      print(i);
+                      _words.removeAt(i);
+                      _controllers.removeAt(i);
+                    });
+                  }
                 },
               )
             ],
@@ -486,14 +537,49 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ],
       ));
     }
+
     return children;
   }
 
-  void _skipButton() async {
+  _sendButton() async {
+    var translationWords = [];
+    for (var i = 0; i < _words.length; i++) {
+      translationWords.add({
+        'lemma': _controllers[i].text,
+        'rating': ratings[i],
+      });
+    }
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+    var obj = jsonEncode({
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'translation': translationWords,
+    });
+    print(obj);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/translation";
+    http.post(url, body: obj, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    }).then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+    });
+
+  }
+
+  _skipButton() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int gid = prefs.getInt("gid");
     int type = prefs.getInt("type");
-    getNextTask(gid, type).then((res) {
+    String taskName = "translation";
+    getNextTask(taskName, gid, type).then((res) {
       setState(() {
         try {
           provideWords = res['data']['synset'];
@@ -505,10 +591,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       });
     });
   }
-
-//  _onClear() {
-//    setState(() {
-//      _controllers[].text = "";
-//    });
-//  }
 }
+
+

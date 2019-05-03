@@ -1,7 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:lkc/netwoklayer.dart';
+import 'package:intl/intl.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 
 //Найруулах
@@ -31,10 +35,15 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  var controller = new TextEditingController();
   double rating = 3.5;
   List reviseWords = [];
   List translatedGlosses = [];
   List language = [];
+  var taskId;
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
   String gloss = '', lemma = '';
   String _value = 'eng';
   List<Map> _values = [
@@ -49,16 +58,21 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     _showRevise();
+      DateTime now = DateTime.now();
+      startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
   }
 
   _showRevise() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    int gid = prefs.getInt("gid");
-    fetchRevise(gid).then((res) {
+    domainId = prefs.getInt("gid");
+    taskNumber = prefs.getInt("taskNum");
+    taskId = prefs.getString("taskID");
+    fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         try {
           if(res['languageCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
           } else {
             reviseWords = res['task']['synset'];
             translatedGlosses = res['task']['translatedGlosses'];
@@ -184,6 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       maxLength: 256,
+                      controller: controller,
                     ),
                   ),
                 ),
@@ -193,7 +208,6 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: EdgeInsets.all(10.0),
               child: new ExpansionTile(
                 backgroundColor: Colors.indigo[200],
-
                 title: new Text("Зүүлт"),
                 children: _translatedGlosses(context),
               ),
@@ -217,7 +231,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 Expanded(
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: _sendButton,
                     padding: EdgeInsets.only(left: 10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -259,6 +273,33 @@ class _MyHomePageState extends State<MyHomePage> {
       ));
     }
     return children;
+  }
+  _sendButton() async{
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    Map data = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'modification': "${controller.text}",
+      'modificationType': "GlossModification",
+    };
+    print(data);
+    var body = jsonEncode(data);
+    print(body);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/translation";
+    http.post(url,
+        headers: {'Content-Type': 'application/json', 'Authorization': token},
+        body: body
+    )
+        .then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
+    _showRevise();
   }
 }
 
