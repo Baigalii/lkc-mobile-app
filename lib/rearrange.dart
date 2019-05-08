@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
-import 'package:lkc/synset.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -225,7 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 55.0),
                   child: new  FlatButton(
-                    onPressed: () => {},
+                    onPressed: _skipButton,
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -402,19 +401,45 @@ class _MyHomePageState extends State<MyHomePage> {
     };
     var body = jsonEncode(obj);
     print(obj);
-//    var prefs = await SharedPreferences.getInstance();
-//    var token = prefs.getString('token');
-//    var url = "http://lkc.num.edu.mn/modification";
-//    http.post(url, body: body, headers: {
-//      'Content-Type': 'application/json',
-//      'Authorization': token,
-//    })
-//        .then((response) async {
-//      print("Response status: ${response.statusCode}");
-//      print("Response body: ${response.body}");
-//    });
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/modification";
+    http.post(url, body: body, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    })
+        .then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
+  }
+  _skipButton() async{
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'skip': true,
+    };
+    var body = jsonEncode(obj);
+    print(obj);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/modification";
+    http.post(url, body: body, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    })
+        .then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
   }
 }
+
 
 _langIcon(String value) {
   if(value=='eng'){

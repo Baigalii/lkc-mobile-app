@@ -35,9 +35,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  double rating = 3.5;
   int radioValue;
-
   List language = [];
 
   List<TextEditingController> txtController = [];
@@ -68,6 +66,11 @@ class _MyHomePageState extends State<MyHomePage> {
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
   }
 
+  void dispose(){
+
+    super.dispose();
+  }
+
   _showValidation() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
     domainId = prefs.getInt("gid");
@@ -95,13 +98,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 gloss = i['gloss'];
               }
             }
-
             _ratings = List(modifiedWords.length);
           }
         } catch (e) {
           print(e);
         }
-
       });
     });
   }
@@ -111,7 +112,6 @@ class _MyHomePageState extends State<MyHomePage> {
       _value = value;
     });
   }
-
 
 
   @override
@@ -216,7 +216,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 55.0),
                   child: new  FlatButton(
-                    onPressed: () => {},
+                    onPressed: _skipButton,
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -430,7 +430,9 @@ class _MyHomePageState extends State<MyHomePage> {
         'rating': _ratings[i],
       });
     }
+      if(_ratings.length==null){
 
+      }
       DateTime now = DateTime.now();
       endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
       Map obj = {
@@ -453,6 +455,32 @@ class _MyHomePageState extends State<MyHomePage> {
 //      print("Response body: ${response.body}");
 //    });
     }
+
+  _skipButton() async{
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'skip': true,
+    };
+    var body = jsonEncode(obj);
+    print(obj);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/validation";
+    http.post(url, body: body, headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token,
+    })
+        .then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
+  }
 }
 
 _langIcon(String value) {

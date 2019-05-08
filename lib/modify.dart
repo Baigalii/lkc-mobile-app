@@ -75,6 +75,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
           } else {
             reviseWords = res['task']['synset'];
+//            if(res['translatedGlosses']==0)
             translatedGlosses = res['task']['translatedGlosses'];
             var t = res['task']['synset'] as List;
             var codes = t.map((x) {
@@ -219,7 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                Expanded(
                  child: new  FlatButton(
-                   onPressed: () => {},
+                   onPressed: _skipButton,
                    padding: EdgeInsets.only(left: 10.0),
                    child: Row( // Replace with a Row for horizontal icon + text
                      children: <Widget>[
@@ -299,8 +300,37 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
     });
-    _showRevise();
+
   }
+
+  _skipButton() async{
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'skip': true,
+      'modificationType': "GlossModification",
+    };
+    var body = jsonEncode(obj);
+    print(obj);
+//    var prefs = await SharedPreferences.getInstance();
+//    var token = prefs.getString('token');
+//    var url = "http://lkc.num.edu.mn/translation";
+//    http.post(url, body: body, headers: {
+//      'Content-Type': 'application/json',
+//      'Authorization': token,
+//    })
+//        .then((response) async {
+//      print("Response status: ${response.statusCode}");
+//      print("Response body: ${response.body}");
+//    });
+  }
+
+
 }
 
 _langIcon(String value) {

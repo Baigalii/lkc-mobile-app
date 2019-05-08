@@ -48,7 +48,6 @@ class ChoiceOfMenu {
   ChoiceOfMenu({this.title, this.icon});
   final String title;
   final IconData icon;
-
 }
 
 List<ChoiceOfMenu> choices = <ChoiceOfMenu>[
@@ -113,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print("burtguuleh heseg ruu orloo");
       Navigator.push(
           context, MaterialPageRoute(builder: (context) => RegisterApp()));
-    } else if(choice.icon == Icons.language){
+    } else if (choice.icon == Icons.language) {
       print("hel solih");
 //      _selectLan;
     }
@@ -202,33 +201,30 @@ class _MyHomePageState extends State<MyHomePage> {
                                   )
                                 ]),
                           ),
-
                           TextFormField(
                             decoration: InputDecoration(
                                 labelText: 'Хэрэглэгчийн нэр* ',
-                                prefixIcon: Icon(Icons.person_outline)
-                            ),
+                                prefixIcon: Icon(Icons.person_outline)),
                             autocorrect: false,
-                            validator: (input) => !input.contains('@') && input.isEmpty
-                                ? 'Хэрэглэгчийн нэрээ оруулна уу'
-                                : null,
+                            validator: (input) =>
+                                !input.contains('@') && input.isEmpty
+                                    ? 'Хэрэглэгчийн нэрээ оруулна уу'
+                                    : null,
                             onSaved: (input) => _email = input,
                             controller: _controllerUsername,
                           ),
-
                           TextFormField(
                             decoration: InputDecoration(
                                 labelText: 'Нууц үг* ',
-                                prefixIcon: Icon(Icons.lock_outline)
-                            ),
-                            validator: (input) => input.length < 8 && input.isEmpty
-                                ? 'Нууц үгээ оруулна уу'
-                                : null,
+                                prefixIcon: Icon(Icons.lock_outline)),
+                            validator: (input) =>
+                                input.length < 8 && input.isEmpty
+                                    ? 'Нууц үгээ оруулна уу'
+                                    : null,
                             onSaved: (input) => _password = input,
                             obscureText: true,
                             controller: _controllerPassword,
                           ),
-
                           Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
@@ -245,9 +241,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     );
                                   },
                                 ),
-                              ]
-                          ),
-
+                              ]),
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
@@ -263,14 +257,15 @@ class _MyHomePageState extends State<MyHomePage> {
                                   //onPressed: _submit,
                                   child: Text('Нэвтрэх'),
                                   onPressed: () {
-                                    if (_controllerUsername.text != null && _controllerUsername.text.length > 0) {
+                                    if (_controllerUsername.text != null &&
+                                        _controllerUsername.text.length > 0) {
                                       print(_controllerUsername.text);
-                                      _login(context, _controllerUsername.text, _controllerPassword.text);
+                                      _login(context, _controllerUsername.text,
+                                          _controllerPassword.text);
                                     }
                                   },
                                 ),
                               ),
-
                               Padding(
                                 padding: const EdgeInsets.all(10.0),
                                 child: RaisedButton(
@@ -293,24 +288,21 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                             ],
                           ),
-                        ]
-                    )
-                ),
+                        ])),
               ),
             )
           ],
-        )
-    );
+        ));
   }
 
-  void _login(context,username, password) {
+  void _login(context, username, password) {
     var url = "http://lkc.num.edu.mn/user/authenticate";
-    http.post(url, body: jsonEncode({"username": username,
-      "password": password}), headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    })
-        .then((response) async {
+    http.post(url,
+        body: jsonEncode({"username": username, "password": password}),
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
       var respObj = jsonDecode(response.body);
@@ -320,24 +312,20 @@ class _MyHomePageState extends State<MyHomePage> {
         //navigate to next
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => PerformanceApp()),
+          MaterialPageRoute(builder: (context) => PerformanceApp()),
         );
       } else {
         showDialog(
-              context: context,
-              builder: (BuildContext context) {
+            context: context,
+            builder: (BuildContext context) {
               return RichAlertDialog(
                 //uses the custom alert dialog
-                alertTitle: richTitle("Хэрэглэгч олдсонгүй!"),
+                alertTitle: richTitle('Хэрэглэгч олдсонгүй'),
                 alertSubtitle: richSubtitle(""),
                 alertType: RichAlertType.WARNING,
               );
-            }
-        );
+            });
       }
     });
   }
 }
-
-
