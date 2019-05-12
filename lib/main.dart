@@ -22,7 +22,7 @@ class LocalisedAppState extends State<LocalisedApp> {
   @override
   void initState() {
     super.initState();
-    _newLocaleDelegate = AppTranslationsDelegate(newLocale: null);
+    _newLocaleDelegate = AppTranslationsDelegate(newLocale: const Locale("en", ""));
     application.onLocaleChanged = onLocaleChange;
   }
 
@@ -40,7 +40,7 @@ class LocalisedAppState extends State<LocalisedApp> {
       ],
       supportedLocales: [
         const Locale("en", ""),
-        const Locale("es", ""),
+        const Locale("mn", ""),
       ],
     );
   }

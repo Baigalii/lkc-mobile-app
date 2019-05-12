@@ -59,11 +59,16 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   void initState() {
     super.initState();
     _showModification();
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
     setState(() {
       _controllers.add(new TextEditingController());
     });
@@ -76,6 +81,11 @@ class _MyHomePageState extends State<MyHomePage> {
     taskNumber = prefs.getInt('taskNum');
     taskId = prefs.getString("taskID");
     print("Task type number");
+
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
+
     fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         _processModifications(res);
@@ -84,33 +94,32 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _processModifications(res) async{
-    try {
-      if(res['statusCode']==0){
-        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-            'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
-            ' Өөр айд шилжинэ үү.';
-      } else {
-        rearrangeWords = res['task']['synset'];
-        translatedWords = res['task']['translatedWords'];
-        var t = res['task']['synset'] as List;
-        var codes = t.map((x) {
-          return x['languageCode'];
-        }).toList();
-        language = codes;
-        print("Modification words:");
-        print(res['task']['synset']);
-        for(var i in rearrangeWords){
-          if(i['languageCode']==_value){
-            lemma = i['lemma'];
-            gloss = i['gloss'];
-          }
-        }
-        for(var i=0; i<translatedWords.length; i++){
-          _controllers[i] = translatedWords[i]['word'];
+    if (res['statusCode']==0){
+      gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+          'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
+          ' Өөр айд шилжинэ үү.';
+    } else {
+      rearrangeWords = res['task']['synset'];
+      translatedWords = res['task']['translatedWords'];
+      var t = res['task']['synset'] as List;
+      var codes = t.map((x) {
+        return x['languageCode'];
+      }).toList();
+      language = codes;
+      print("Modification words:");
+      print(res['task']['synset']);
+
+      for(var i in rearrangeWords) {
+        if(i['languageCode']==_value){
+          lemma = i['lemma'];
+          gloss = i['gloss'];
         }
       }
-    } catch (e) {
-      print(e);
+
+      for(var i = 0; i < translatedWords.length; i++) {
+        _controllers.add(TextEditingController(text: translatedWords[i]['word']));
+        _controllerModified.add(TextEditingController());
+      }
     }
   }
 
@@ -134,6 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
           title: Text(widget.title),
           leading: IconButton(
@@ -320,8 +330,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var children = <Widget>[];
     for (var i=0; i < translatedWords.length; i++) {
       var controller = new TextEditingController();
-      var controllerModified = new TextEditingController();
-//      controllerModified.text = '';
+      var controllerModified = _controllerModified[i];
       controller.text = translatedWords[i]['word'];
       children.add(Column(
         children: <Widget>[
@@ -421,37 +430,50 @@ class _MyHomePageState extends State<MyHomePage> {
   _skipButton() async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
     Map obj = {
-      'taskId': "${taskId}",
-      'domainId': "${domainId}",
-      'start_date': "${startDate}",
-      'end_date': "${endDate}",
+      'taskId': taskId.toString(),
+      'domainId': domainId,
+      'start_date': startDate,
+      'end_date': endDate,
       'skip': true,
     };
     var body = jsonEncode(obj);
-    print(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/modification";
-    http.post(url, body: body, headers: {
+
+    var client = new http.Client();
+
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true }';
+    print(_body);
+
+    client.post(url, body: _body, headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
       'Authorization': token,
     }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
 
-      var body = jsonDecode(response.body);
-
-//      prefs.setString('taskID', body);
-//      _showModification();
-      print(body);
-      http.get('http://lkc.num.edu.mn/task/2/119', headers: {
+      client.get('http://lkc.num.edu.mn/task/2/119', headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
       }).then((result) {
         print(result.body);
-        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+        var taskResult = jsonDecode(result.body);
+        if (taskResult['statusCode'] != 0) {
+          prefs.setString("taskID", taskResult['task']['_id'].toString());
+          _showModification();
+        } else {
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(_text),
+            duration: Duration(seconds: 5),
+          ));
+        }
       });
     });
 
