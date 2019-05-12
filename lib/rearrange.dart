@@ -78,39 +78,49 @@ class _MyHomePageState extends State<MyHomePage> {
     print("Task type number");
     fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
-        try {
-          if(res['statusCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-                'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
-                ' Өөр айд шилжинэ үү.';
-          } else {
-            rearrangeWords = res['task']['synset'];
-            translatedWords = res['task']['translatedWords'];
-            var t = res['task']['synset'] as List;
-            var codes = t.map((x) {
-              return x['languageCode'];
-            }).toList();
-            language = codes;
-            print("Modification words:");
-            print(res['task']['synset']);
-            for(var i in rearrangeWords){
-              if(i['languageCode']==_value){
-                lemma = i['lemma'];
-                gloss = i['gloss'];
-              }
-            }
-            for(var i=0; i<translatedWords.length; i++){
-              _controllers[i] = translatedWords[i]['word'];
-            }
-          }
-        } catch (e) {
-          print(e);
-        }
+        _processModifications(res);
       });
     });
   }
 
+  void _processModifications(res) async{
+    try {
+      if(res['statusCode']==0){
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
+            ' Өөр айд шилжинэ үү.';
+      } else {
+        rearrangeWords = res['task']['synset'];
+        translatedWords = res['task']['translatedWords'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        print("Modification words:");
+        print(res['task']['synset']);
+        for(var i in rearrangeWords){
+          if(i['languageCode']==_value){
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+        for(var i=0; i<translatedWords.length; i++){
+          _controllers[i] = translatedWords[i]['word'];
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void _onChanged(String value){
+    for(var item in rearrangeWords){
+      if(item['languageCode']==value){
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
     setState(() {
       _value = value;
     });
@@ -168,13 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   );
                 }).toList(),
-                onChanged: (value){
-                  for(var item in rearrangeWords){
-                    if(item['languageCode']==value){
-                      lemma = item['lemma'];
-                      gloss = item['gloss'];
-                    }
-                  }
+                onChanged: (value) {
                   _onChanged(value);
                 },
               ),
@@ -413,6 +417,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response body: ${response.body}");
     });
   }
+
   _skipButton() async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
@@ -432,11 +437,24 @@ class _MyHomePageState extends State<MyHomePage> {
     http.post(url, body: body, headers: {
       'Content-Type': 'application/json',
       'Authorization': token,
-    })
-        .then((response) async {
+    }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
+
+      var body = jsonDecode(response.body);
+
+//      prefs.setString('taskID', body);
+//      _showModification();
+      print(body);
+      http.get('http://lkc.num.edu.mn/task/2/119', headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token,
+      }).then((result) {
+        print(result.body);
+        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+      });
     });
+
   }
 }
 

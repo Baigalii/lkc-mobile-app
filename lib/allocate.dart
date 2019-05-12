@@ -78,7 +78,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       _controllers.add(new TextEditingController());
       ratings.add(0);
     });
-
   }
 
   _showTranslation() async {
@@ -88,32 +87,44 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     taskId = prefs.getString("taskID");
     fetchAllocation(taskNumber,domainId).then((res) {
       setState(() {
-        try {
-          if (res['statusCode'] == 0) {
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
-          } else {
-            provideWords = res['task']['synset'];
-            var t = res['task']['synset'] as List;
-            var codes = t.map((x) {
-              return x['languageCode'];
-            }).toList();
-            language = codes;
-            for (var i in provideWords) {
-              if (i['languageCode'] == _value) {
-                lemma = i['lemma'];
-                gloss = i['gloss'];
-              }
-            }
-          }
-        } catch (e) {
-          print(e);
-        }
+        _processAllocations(res);
       });
     });
   }
 
+  void _processAllocations(res) async{
+    try {
+      if (res['statusCode'] == 0) {
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+      } else {
+        provideWords = res['task']['synset'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        for (var i in provideWords) {
+          if (i['languageCode'] == _value) {
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void _onChanged(String value) {
+    for (var item in provideWords) {
+      if (item['languageCode'] == value) {
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
+
+    print(value);
     setState(() {
       _value = value;
     });
@@ -201,12 +212,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                     );
                   }).toList(),
                   onChanged: (value) {
-                    for (var item in provideWords) {
-                      if (item['languageCode'] == value) {
-                        lemma = item['lemma'];
-                        gloss = item['gloss'];
-                      }
-                    }
                     _onChanged(value);
                   },
                 ),
@@ -577,18 +582,30 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   _skipButton() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int gid = prefs.getInt("gid");
-    int type = prefs.getInt("type");
+    var type = prefs.getInt("type");
     String taskName = "translation";
-    getNextTask(taskName, gid, type).then((res) {
-      setState(() {
-        try {
-          provideWords = res['data']['synset'];
-          print("Provide words:");
-          print(res['data']['synset']);
-        } catch (e) {
-          print(e);
-        }
-      });
+    String taskId = prefs.getString('taskID');
+
+    getNextTask(taskName, gid, taskId).then((res) {
+      if (res['success'] == true) {
+        prefs.setString('taskID', res['data']['taskId']);
+        _processAllocations({
+          'status': 1,
+          'task': {
+            'synset': res['data']['synset'],
+          }
+        });
+        print(res['data']['synset']);
+        _onChanged(language[0]);
+      }
+//      try {
+//        provideWords = res['data']['synset'];
+//        print("Provide words:");
+//        print(res['data']['synset']);
+//        print(res);
+//      } catch (e) {
+//        print(e);
+//      }
     });
   }
 }
