@@ -44,7 +44,8 @@ class _MyHomePageState extends State<MyHomePage> {
   int domainId;
   int taskNumber;
   String startDate, endDate;
-  String gloss = '', lemma = '';
+  String gloss = '',
+      lemma = '';
   String _value = 'eng';
   List<Map> _values = [
     {'code': 'eng', 'label': 'English'},
@@ -55,50 +56,65 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   void initState() {
     super.initState();
     _showRevise();
-      DateTime now = DateTime.now();
-      startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
   }
 
-  _showRevise() async{
+  _showRevise() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     domainId = prefs.getInt("gid");
     taskNumber = prefs.getInt("taskNum");
     taskId = prefs.getString("taskID");
     fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
-        try {
-          if(res['languageCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
-          } else {
-            reviseWords = res['task']['synset'];
-//            if(res['translatedGlosses']==0)
-            translatedGlosses = res['task']['translatedGlosses'];
-            var t = res['task']['synset'] as List;
-            var codes = t.map((x) {
-              return x['languageCode'];
-            }).toList();
-            language = codes;
-            print("Revise words:");
-            print(res['task']['synset']);
-            for(var i in reviseWords){
-              if(i['languageCode']==_value){
-                lemma = i['lemma'];
-                gloss = i['gloss'];
-              }
-            }
-          }
-        } catch (e) {
-          print(e);
-        }
+        _processModify(res);
       });
     });
   }
 
-  void _onChanged(String value){
+  _processModify(res) {
+    try {
+      if (res['statusCode'] == 0) {
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+      } else {
+        reviseWords = res['task']['synset'];
+//            if(res['translatedGlosses']==0)
+        translatedGlosses = res['task']['translatedGlosses'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        print("Revise words:");
+        print(res['task']['synset']);
+        for (var i in reviseWords) {
+          if (i['languageCode'] == _value) {
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  void _onChanged(String value) {
+    for (var item in reviseWords) {
+      if (item['languageCode'] == value) {
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
     setState(() {
       _value = value;
     });
@@ -111,10 +127,11 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () =>  Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PerformanceApp()),
-            ),
+            onPressed: () =>
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => PerformanceApp()),
+                ),
           )),
       body: new SingleChildScrollView(
         child: new Column(
@@ -137,29 +154,23 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: DropdownButton(
                 value: _value,
-                items: _values.where((x){
+                items: _values.where((x) {
                   return language.contains(x['code']);
-                }).map((value){
+                }).map((value) {
                   return new DropdownMenuItem(
                     value: value['code'],
                     child: new Row(
                       children: <Widget>[
 //                        new Icon(Icons.language),
-                      _langIcon(value['code'].toString()),
+                        _langIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
                   );
                 }).toList(),
-                onChanged: (value){
-                  for(var item in reviseWords){
-                    if(item['languageCode']==value){
-                      lemma = item['lemma'];
-                      gloss = item['gloss'];
-                    }
-                  }
+                onChanged: (value) {
                   _onChanged(value);
-                  },
+                },
               ),
             ),
             Padding(
@@ -188,6 +199,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Padding(
                     padding: EdgeInsets.all(10.0),
                     child: new TextField(
+                      keyboardType: TextInputType.multiline,
+                      maxLines: 3,
                       decoration: InputDecoration(
                         labelText: 'Тайлбар засварлах хэсэг*',
                         hintText: 'Засаж найруулсан орчуулгаа энд бичнэ үү...',
@@ -218,17 +231,18 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Row(
               children: <Widget>[
-               Expanded(
-                 child: new  FlatButton(
-                   onPressed: _skipButton,
-                   padding: EdgeInsets.only(left: 10.0),
-                   child: Row( // Replace with a Row for horizontal icon + text
-                     children: <Widget>[
-                       Text(" Алгасах", style: TextStyle(color: Colors.indigo),),
-                       Icon(Icons.skip_next, color: Colors.indigo,)
-                     ],
-                   ),
-                 ),
+                Expanded(
+                  child: new FlatButton(
+                    onPressed: _skipButton,
+                    padding: EdgeInsets.only(left: 10.0),
+                    child: Row( // Replace with a Row for horizontal icon + text
+                      children: <Widget>[
+                        Text(
+                          " Алгасах", style: TextStyle(color: Colors.indigo),),
+                        Icon(Icons.skip_next, color: Colors.indigo,)
+                      ],
+                    ),
+                  ),
                 ),
                 Expanded(
                   child: new FlatButton(
@@ -236,7 +250,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     padding: EdgeInsets.only(left: 10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
-                        Text(" Илгээх ", style: TextStyle(color: Colors.indigo),),
+                        Text(
+                          " Илгээх ", style: TextStyle(color: Colors.indigo),),
                         Icon(Icons.send, color: Colors.indigo,)
                       ],
                     ),
@@ -252,7 +267,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _translatedGlosses(BuildContext context) {
     var children = <Widget>[];
-    for (var i=0; i < translatedGlosses.length; i++) {
+    for (var i = 0; i < translatedGlosses.length; i++) {
       var controller = new TextEditingController();
       controller.text = translatedGlosses[i]['gloss'];
       children.add(Row(
@@ -261,6 +276,8 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Padding(
               padding: EdgeInsets.all(10.0),
               child: new TextField(
+                keyboardType: TextInputType.multiline,
+                maxLines: null,
                 decoration: InputDecoration(
                   hintStyle: TextStyle(color: Colors.grey),
                   prefixIcon: Icon(Icons.attachment),
@@ -275,7 +292,8 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return children;
   }
-  _sendButton() async{
+
+  _sendButton() async {
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     Map data = {
@@ -300,51 +318,67 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
     });
-
   }
 
-  _skipButton() async{
+  _skipButton() async {
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    Map obj = {
-      'taskId': "${taskId}",
-      'domainId': "${domainId}",
-      'start_date': "${startDate}",
-      'end_date': "${endDate}",
-      'skip': true,
-      'modificationType': "GlossModification",
-    };
-    var body = jsonEncode(obj);
-    print(obj);
-//    var prefs = await SharedPreferences.getInstance();
-//    var token = prefs.getString('token');
-//    var url = "http://lkc.num.edu.mn/translation";
-//    http.post(url, body: body, headers: {
-//      'Content-Type': 'application/json',
-//      'Authorization': token,
-//    })
-//        .then((response) async {
-//      print("Response status: ${response.statusCode}");
-//      print("Response body: ${response.body}");
-//    });
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true , "modificationType": "GlossModification"}';
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/modification";
+    var client = new http.Client();
+
+    client.post(url, body: _body, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
+
+    client.get('http://lkc.num.edu.mn/task/5/' + domainId.toString(), headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((result) {
+      print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+      var taskResult = jsonDecode(result.body);
+      if (taskResult['statusCode'] != 0) {
+        prefs.setString("taskID", taskResult['task']['_id'].toString());
+        _showRevise();
+      } else {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(_text),
+          duration: Duration(seconds: 5),
+        ));
+      }
+    });
   }
-
-
 }
-
-_langIcon(String value) {
-  if(value=='eng'){
-    return new Image(image: new AssetImage('images/united-kingdom.png'), width: 25, height: 25,);
-  } else if(value=='zho'){
-    return new Image(image: new AssetImage('images/china.png'), width: 25, height: 25,);
-  } else if(value=='deu'){
-    return new Image(image: new AssetImage('images/germany.png'), width: 25, height: 25,);
-  } else if(value=='fra'){
-    return new Image(image: new AssetImage('images/france.png'), width: 25, height: 25,);
-  } else if(value=='rus'){
-    return new Image(image: new AssetImage('images/russia.png'), width: 25, height: 25,);
-  } else if(value=='jpn'){
-    return new Image(image: new AssetImage('images/japan.png'), width: 25, height: 25,);
-  }
+  _langIcon(String value) {
+    if (value == 'eng') {
+      return new Image(image: new AssetImage('images/united-kingdom.png'),
+        width: 25,
+        height: 25,);
+    } else if (value == 'zho') {
+      return new Image(
+        image: new AssetImage('images/china.png'), width: 25, height: 25,);
+    } else if (value == 'deu') {
+      return new Image(
+        image: new AssetImage('images/germany.png'), width: 25, height: 25,);
+    } else if (value == 'fra') {
+      return new Image(
+        image: new AssetImage('images/france.png'), width: 25, height: 25,);
+    } else if (value == 'rus') {
+      return new Image(
+        image: new AssetImage('images/russia.png'), width: 25, height: 25,);
+    } else if (value == 'jpn') {
+      return new Image(
+        image: new AssetImage('images/japan.png'), width: 25, height: 25,);
+    }
 }

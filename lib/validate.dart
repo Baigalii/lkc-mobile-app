@@ -58,18 +58,19 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   void initState() {
     super.initState();
     _showValidation();
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
   }
 
-  void dispose(){
 
-    super.dispose();
-  }
 
   _showValidation() async{
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -78,41 +79,54 @@ class _MyHomePageState extends State<MyHomePage> {
     taskId = prefs.getString("taskID");
     fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
-        try {
-          if(res['statusCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
-          } else {
-            validationWords = res['task']['synset'];
-            modifiedWords = res['task']['modifiedWords'];
-            var t = res['task']['synset'] as List;
-            var codes = t.map((x) {
-              return x['languageCode'];
-            }).toList();
-            language = codes;
-            print("Validation words:");
-            print(res['task']['synset']);
-            for(var i in validationWords){
-              if(i['languageCode']==_value){
-                lemma = i['lemma'];
-                gloss = i['gloss'];
-              }
-            }
-            _ratings = List(modifiedWords.length);
-          }
-        } catch (e) {
-          print(e);
-        }
+        _processValidations(res);
       });
     });
   }
 
+  _processValidations(res) async{
+    try {
+      if(res['statusCode']==0){
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+      } else {
+        validationWords = res['task']['synset'];
+        modifiedWords = res['task']['modifiedWords'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        print("Validation words:");
+        print(res['task']['synset']);
+        for(var i in validationWords){
+          if(i['languageCode']==_value){
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+        _ratings = List(modifiedWords.length);
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void _onChanged(String value){
+    for(var item in validationWords){
+      if(item['languageCode']==value){
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
     setState(() {
       _value = value;
     });
   }
 
+  void dispose(){
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -164,12 +178,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 }).toList(),
                 onChanged: (value){
-                  for(var item in validationWords){
-                    if(item['languageCode']==value){
-                      lemma = item['lemma'];
-                      gloss = item['gloss'];
-                    }
-                  }
                   _onChanged(value);
                   },
               ),
@@ -230,7 +238,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 10.0, right: 5.0),
                   child: new FlatButton(
-                    onPressed: _sendButton,
+                    onPressed: (){
+                        if(_ratings.length==0){
+                          Fluttertoast.showToast(msg: "Илгээх өгөгдөл байхгүй байна.");
+                        } else {
+                          _sendButton();
+                        }
+                    },
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -430,11 +444,11 @@ class _MyHomePageState extends State<MyHomePage> {
         'rating': _ratings[i],
       });
     }
-      if(_ratings.length==null){
 
-      }
       DateTime now = DateTime.now();
       endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+      endDate = endDate.replaceAll(' ', 'T') + '.000Z';
+
       Map obj = {
         'taskId': "${taskId}",
         'domainId': "${domainId}",
@@ -443,42 +457,77 @@ class _MyHomePageState extends State<MyHomePage> {
         'validations': validationWords,
       };
       print(obj);
-//    var prefs = await SharedPreferences.getInstance();
-//    var token = prefs.getString('token');
-//    var url = "http://lkc.num.edu.mn/validation";
-//    http.post(url, body: obj, headers: {
-//      'Content-Type': 'application/json',
-//      'Authorization': token,
-//    })
-//        .then((response) async {
-//      print("Response status: ${response.statusCode}");
-//      print("Response body: ${response.body}");
-//    });
+    var _body = jsonEncode(obj);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/validation";
+    var client = new http.Client();
+    client.post(url, body: _body, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      client.get('http://lkc.num.edu.mn/task/3/' + domainId.toString(), headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
+        'Authorization': token,
+      }).then((result) {
+        print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+        var taskResult = jsonDecode(result.body);
+        if (taskResult['statusCode'] != 0) {
+          prefs.setString("taskID", taskResult['task']['_id'].toString());
+          _showValidation();
+        } else {
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(_text),
+            duration: Duration(seconds: 5),
+          ));
+        }
+      });
+    });
     }
 
   _skipButton() async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    Map obj = {
-      'taskId': "${taskId}",
-      'domainId': "${domainId}",
-      'start_date': "${startDate}",
-      'end_date': "${endDate}",
-      'skip': true,
-    };
-    var body = jsonEncode(obj);
-    print(obj);
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true }';
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/validation";
-    http.post(url, body: body, headers: {
+    var client = new http.Client();
+
+    client.post(url, body: _body, headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
       'Authorization': token,
-    })
-        .then((response) async {
+    }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
+    });
+
+    client.get('http://lkc.num.edu.mn/task/3/' + domainId.toString(), headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((result) {
+      print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+      var taskResult = jsonDecode(result.body);
+      if (taskResult['statusCode'] != 0) {
+        prefs.setString("taskID", taskResult['task']['_id'].toString());
+        _showValidation();
+      } else {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(_text),
+          duration: Duration(seconds: 5),
+        ));
+      }
     });
   }
 }

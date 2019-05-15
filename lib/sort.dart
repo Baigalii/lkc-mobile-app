@@ -52,12 +52,16 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'}
   ];
   List items = [];
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   void initState() {
     super.initState();
     _showSort();
     DateTime now = DateTime.now();
-    startDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
   }
 
   _showSort() async{
@@ -66,35 +70,45 @@ class _MyHomePageState extends State<MyHomePage> {
     taskNumber = prefs.getInt("taskNum");
     fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
-        try {
-          if(res['languageCode']==0){
-            gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-                'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
-          } else {
-            sortWords = res['task']['synset'];
-            modifiedGlosses = res['task']['modifiedGlosses'];
-            var t = res['task']['synset'] as List;
-            var codes = t.map((x) {
-              return x['languageCode'];
-            }).toList();
-            language = codes;
-            print("Revise words:");
-            print(res['task']['synset']);
-            for(var i in sortWords){
-              if(i['languageCode']==_value){
-                lemma = i['lemma'];
-                gloss = i['gloss'];
-              }
-            }
-          }
-        } catch (e) {
-          print(e);
-        }
+       _processSort(res);
       });
     });
   }
 
+  _processSort(res) async{
+    try {
+      if(res['statusCode']==0){
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+      } else {
+        sortWords = res['task']['synset'];
+        modifiedGlosses = res['task']['modifiedGlosses'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        print("Sort words:");
+        print(res['task']['synset']);
+        for(var i in sortWords){
+          if(i['languageCode']==_value){
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
   void _onChanged(String value){
+    for(var item in sortWords){
+      if(item['languageCode']==value){
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
     setState(() {
       _value = value;
     });
@@ -148,12 +162,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               }).toList(),
               onChanged: (value){
-                for(var item in sortWords){
-                  if(item['languageCode']==value){
-                    lemma = item['lemma'];
-                    gloss = item['gloss'];
-                  }
-                }
                 _onChanged(value);
                 },
             ),
@@ -191,7 +199,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 print(after);
                 setState(() {
                   print('on drag finish $before $after');
-                  String data = modifiedGlosses[before]['gloss'];
+                  var data = modifiedGlosses[before];
                   modifiedGlosses.removeAt(before);
                   modifiedGlosses.insert(after, data);
                 });
@@ -270,28 +278,41 @@ class _MyHomePageState extends State<MyHomePage> {
   _skipButton() async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    Map obj = {
-      'taskId': "${taskId}",
-      'domainId': "${domainId}",
-      'start_date': "${startDate}",
-      'end_date': "${endDate}",
-      'skip': true,
-      'validationType': "GlossValidation",
-    };
-    var body = jsonEncode(obj);
-    print(obj);
-//    var prefs = await SharedPreferences.getInstance();
-//    var token = prefs.getString('token');
-//    var url = "http://lkc.num.edu.mn/translation";
-//    http.post(url, body: body, headers: {
-//      'Content-Type': 'application/json',
-//      'Authorization': token,
-//    })
-//        .then((response) async {
-//      print("Response status: ${response.statusCode}");
-//      print("Response body: ${response.body}");
-//    });
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true, "validationType": "GlossValidation"}';
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/validation";
+    var client = new http.Client();
+
+    client.post(url, body: _body, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
+
+    client.get('http://lkc.num.edu.mn/task/6/' + domainId.toString(), headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((result) {
+      print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+      var taskResult = jsonDecode(result.body);
+      if (taskResult['statusCode'] != 0) {
+        prefs.setString("taskID", taskResult['task']['_id'].toString());
+        _showSort();
+      } else {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(_text),
+          duration: Duration(seconds: 5),
+        ));
+      }
+    });
   }
 }
 

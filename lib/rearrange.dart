@@ -34,7 +34,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<String> _words = [];
   List<TextEditingController> _controllers = [];
   List<TextEditingController> _controllerModified = [];
   TextEditingController _textFieldController = TextEditingController();
@@ -71,6 +70,7 @@ class _MyHomePageState extends State<MyHomePage> {
     startDate = startDate.replaceAll(' ', 'T') + '.000Z';
     setState(() {
       _controllers.add(new TextEditingController());
+      _controllerModified.add(new TextEditingController());
     });
 
   }
@@ -94,33 +94,38 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _processModifications(res) async{
-    if (res['statusCode']==0){
-      gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-          'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
-          ' Өөр айд шилжинэ үү.';
-    } else {
-      rearrangeWords = res['task']['synset'];
-      translatedWords = res['task']['translatedWords'];
-      var t = res['task']['synset'] as List;
-      var codes = t.map((x) {
-        return x['languageCode'];
-      }).toList();
-      language = codes;
-      print("Modification words:");
-      print(res['task']['synset']);
+    try{
+      if (res['statusCode']==0){
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
+            ' Өөр айд шилжинэ үү.';
+      } else {
+        rearrangeWords = res['task']['synset'];
+        translatedWords = res['task']['translatedWords'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        print("Modification words:");
+        print(res['task']['synset']);
 
-      for(var i in rearrangeWords) {
-        if(i['languageCode']==_value){
-          lemma = i['lemma'];
-          gloss = i['gloss'];
+        for(var i in rearrangeWords) {
+          if(i['languageCode']==_value){
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+
+        for(var i = 0; i < translatedWords.length; i++) {
+          _controllers.add(TextEditingController(text: translatedWords[i]['word']));
+          _controllerModified.add(new TextEditingController());
         }
       }
-
-      for(var i = 0; i < translatedWords.length; i++) {
-        _controllers.add(TextEditingController(text: translatedWords[i]['word']));
-        _controllerModified.add(TextEditingController());
-      }
+    } catch(e){
+      print(e);
     }
+
   }
 
   void _onChanged(String value){
@@ -130,15 +135,11 @@ class _MyHomePageState extends State<MyHomePage> {
         gloss = item['gloss'];
       }
     }
+
     setState(() {
       _value = value;
     });
   }
-//  void _modifiedWord(String word) {
-//    setState(() {
-//
-//    });
-//  }
 
   @override
   Widget build(BuildContext context) {
@@ -379,7 +380,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 onPressed: () {
                   setState(() {
                     print(i);
-                    _words.removeAt(i);
+                    translatedWords.removeAt(i);
                     _controllers.removeAt(i);
                   });
                 },
@@ -404,7 +405,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print(_controllers.length);
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
-
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
     Map obj = {
       'taskId': "${taskId}",
       'domainId': "${domainId}",
@@ -413,17 +414,39 @@ class _MyHomePageState extends State<MyHomePage> {
       'modification': modificationWords,
     };
     var body = jsonEncode(obj);
-    print(obj);
+//    print(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/modification";
-    http.post(url, body: body, headers: {
+    var client = new http.Client();
+//    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
+//        '"end_date": "${endDate}", "modification": modificationWords }';
+    client.post(url, body: body, headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
       'Authorization': token,
-    })
-        .then((response) async {
+    }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
+
+      client.get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
+        'Authorization': token,
+      }).then((result) {
+        print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+        var taskResult = jsonDecode(result.body);
+        if (taskResult['statusCode'] != 0) {
+          prefs.setString("taskID", taskResult['task']['_id'].toString());
+          _showModification();
+        } else {
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(_text),
+            duration: Duration(seconds: 5),
+          ));
+        }
+      });
     });
   }
 
@@ -432,23 +455,16 @@ class _MyHomePageState extends State<MyHomePage> {
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    Map obj = {
-      'taskId': taskId.toString(),
-      'domainId': domainId,
-      'start_date': startDate,
-      'end_date': endDate,
-      'skip': true,
-    };
-    var body = jsonEncode(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/modification";
-
     var client = new http.Client();
 
-    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true }';
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", '
+        '"start_date": "${startDate}", "end_date": "${endDate}", "skip": true }';
     print(_body);
-
+    print("Domain id:");
+    print(domainId);
     client.post(url, body: _body, headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/plain, */*',
@@ -457,7 +473,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
 
-      client.get('http://lkc.num.edu.mn/task/2/119', headers: {
+      client.get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
@@ -479,7 +495,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   }
 }
-
 
 _langIcon(String value) {
   if(value=='eng'){

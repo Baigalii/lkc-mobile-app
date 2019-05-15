@@ -52,7 +52,7 @@ Future fetchAllocation(int taskType, int gid) async {
 Future getNextTask(String task, int gid, String type) async{
   var prefs = await SharedPreferences.getInstance();
   var token = prefs.getString('token');
-  String url = 'http://lkc.num.edu.mn/' + task + '/next?domain=' + gid.toString() + '&task=' + type.toString();
+  String url = 'http://lkc.num.edu.mn/' + task.toString() + '/next?domain=' + gid.toString() + '&task=' + type.toString();
   print(url);
   var response = await http.get(url, headers: {
     'Content-Type': 'application/json',
@@ -62,7 +62,7 @@ Future getNextTask(String task, int gid, String type) async{
   return jsonDecode(response.body);
 }
 
-Future getPrevTask(String task, int gid, int type) async{
+Future getPrevTask(String task, int gid, String type) async{
   var prefs = await SharedPreferences.getInstance();
   var token = prefs.getString('token');
   var response = await http.get('http://lkc.num.edu.mn/' + task.toString() + '/prev?domain=' + gid.toString() + '&task=' + type.toString(), headers: {

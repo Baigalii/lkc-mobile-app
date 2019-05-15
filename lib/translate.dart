@@ -56,11 +56,16 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   void initState() {
     super.initState();
     _showTranslation();
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
   }
 
   _showTranslation() async {
@@ -70,39 +75,51 @@ class _MyHomePageState extends State<MyHomePage> {
     taskId = prefs.getString("taskID");
     fetchAllocation(taskNumber,domainId).then((res) {
       setState(() {
-        try {
-          if (res['languageCode'] == 0) {
-            gloss =
-                'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл '
-                'бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
-          } else {
-            translationWords = res['task']['synset'];
-            targetWords = res['task']['targetWords'];
-            var t = res['task']['synset'] as List;
-            var codes = t.map((x) {
-              return x['languageCode'];
-            }).toList();
-            language = codes;
-            print("Validation words:");
-            print(res['task']['synset']);
-            for (var i in translationWords) {
-              if (i['languageCode'] == _value) {
-                lemma = i['lemma'];
-                gloss = i['gloss'];
-              }
-            }
-          }
-        } catch (e) {
-          print(e);
-        }
+        _processTranslation(res);
       });
     });
   }
 
+  _processTranslation(res) async{
+    try {
+      if (res['statusCode'] == 0) {
+        gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+      } else {
+        translationWords = res['task']['synset'];
+        targetWords = res['task']['targetWords'];
+        var t = res['task']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        print("Validation words:");
+        print(res['task']['synset']);
+        for (var i in translationWords) {
+          if (i['languageCode'] == _value) {
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
   void _onChanged(String value) {
+    for (var item in translationWords) {
+      if (item['languageCode'] == value) {
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
     setState(() {
       _value = value;
     });
+  }
+
+  void dispose(){
+    super.dispose();
   }
 
   @override
@@ -157,12 +174,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  for (var item in translationWords) {
-                    if (item['languageCode'] == value) {
-                      lemma = item['lemma'];
-                      gloss = item['gloss'];
-                    }
-                  }
                   _onChanged(value);
                 },
               ),
@@ -201,6 +212,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.all(20.0),
                   child: TextField(
+                    keyboardType: TextInputType.multiline,
+                      maxLines: 2,
                     decoration: InputDecoration(
                         border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
@@ -332,28 +345,42 @@ class _MyHomePageState extends State<MyHomePage> {
   _skipButton() async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    Map obj = {
-      'taskId': "${taskId}",
-      'domainId': "${domainId}",
-      'start_date': "${startDate}",
-      'end_date': "${endDate}",
-      'skip': true,
-      'translationType': "GlossTranslation",
-    };
-    var body = jsonEncode(obj);
-    print(obj);
-//    var prefs = await SharedPreferences.getInstance();
-//    var token = prefs.getString('token');
-//    var url = "http://lkc.num.edu.mn/translation";
-//    http.post(url, body: body, headers: {
-//      'Content-Type': 'application/json',
-//      'Authorization': token,
-//    })
-//        .then((response) async {
-//      print("Response status: ${response.statusCode}");
-//      print("Response body: ${response.body}");
-//    });
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
+        ' "end_date": "${endDate}", "skip": true , "translationType:" "GlossTranslation"}';
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/translation";
+    var client = new http.Client();
+
+    client.post(url, body: _body, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+    });
+
+    client.get('http://lkc.num.edu.mn/task/4/' + domainId.toString(), headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((result) {
+      print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+      var taskResult = jsonDecode(result.body);
+      if (taskResult['statusCode'] != 0) {
+        prefs.setString("taskID", taskResult['task']['_id'].toString());
+        _showTranslation();
+      } else {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(_text),
+          duration: Duration(seconds: 5),
+        ));
+      }
+    });
   }
 
 

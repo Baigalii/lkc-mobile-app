@@ -66,6 +66,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
   @override
   void initState() {
     super.initState();
@@ -326,7 +329,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   child: Center(
                     child: FlatButton(
                       padding: EdgeInsets.only(left: 80.0),
-                      onPressed: _sendButton,
+                      onPressed: (){
+                        _sendButton();
+                      },
                       child: Row(
                         // Replace with a Row for horizontal icon + text
                         children: <Widget>[
@@ -469,10 +474,13 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       labelText: 'Илэрхийлэх үг',
                       hintText: '',
                       hintStyle: TextStyle(color: Colors.grey),
-                      errorText:
-                          _validate ? 'Илгээх өгөгдөл байхгүй байна!' : null,
                       suffix: IconButton(
                         icon: Icon(Icons.cancel),
+                        onPressed: (){
+                          setState(() {
+                            _controllers[i].text = "";
+                          });
+                        },
                       ),
                     ),
                     controller: _controllers[i],
@@ -557,24 +565,45 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
 
-    var obj = jsonEncode({
+    Map obj = {
       'taskId': "${taskId}",
       'domainId': "${domainId}",
       'start_date': "${startDate}",
       'end_date': "${endDate}",
       'translation': translationWords,
-    });
+    };
     print(obj);
+    var _body = jsonEncode(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/translation";
-    http.post(url, body: obj, headers: {
+    var client = new http.Client();
+
+    client.post(url, body: _body, headers: {
       'Content-Type': 'application/json',
       'Authorization': token,
     }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
 
+      client.get('http://lkc.num.edu.mn/task/1/' + domainId.toString(), headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
+        'Authorization': token,
+      }).then((result) {
+        print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+        var taskResult = jsonDecode(result.body);
+        if (taskResult['statusCode'] != 0) {
+          prefs.setString("taskID", taskResult['task']['_id'].toString());
+          _showTranslation();
+        } else {
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(_text),
+            duration: Duration(seconds: 5),
+          ));
+        }
+      });
     });
 
   }

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:lkc/networklayer.dart';
 import 'package:lkc/task.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 
 void main() => runApp(PreviousApp());
@@ -27,8 +30,83 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  List prevWords = [];
+  List language = [];
   double rating = 3.5;
   int radioValue;
+  var taskId;
+  var data;
+  int domainId;
+  int taskNumber;
+  String startDate, endDate;
+  String gloss = '', lemma = '';
+  String _value = 'eng';
+  List<Map> _values = [
+    {'code': 'eng', 'label': 'English'},
+    {'code': 'zho', 'label': 'Chinese'},
+    {'code': 'deu', 'label': 'Deutsch'},
+    {'code': 'fra', 'label': 'French'},
+    {'code': 'rus', 'label': 'Russian'},
+    {'code': 'jpn', 'label': 'Japanese'},
+  ];
+
+  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    _showPrev();
+    DateTime now = DateTime.now();
+    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+
+  }
+
+  _showPrev() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    taskNumber = prefs.getInt("taskNum");
+    String taskName = "translation";
+    domainId = prefs.getInt("gid");
+    taskId = prefs.getString("taskID");
+    getPrevTask(taskName, domainId, taskId).then((res) {
+      setState(() {
+        _processPrevWords(res);
+      });
+    });
+  }
+
+  void _processPrevWords(res) async{
+    try {
+        prevWords = res['data']['synset'];
+        data = res['data'];
+        var t = res['data']['synset'] as List;
+        var codes = t.map((x) {
+          return x['languageCode'];
+        }).toList();
+        language = codes;
+        for (var i in prevWords) {
+          if (i['languageCode'] == _value) {
+            lemma = i['lemma'];
+            gloss = i['gloss'];
+          }
+        }
+    } catch (e) {
+      print(e);
+    }
+  }
+  void _onChanged(String value) {
+    for (var item in prevWords) {
+      if (item['languageCode'] == value) {
+        lemma = item['lemma'];
+        gloss = item['gloss'];
+      }
+    }
+    print(value);
+    setState(() {
+      _value = value;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,24 +138,65 @@ class _MyHomePageState extends State<MyHomePage> {
             Divider(
               height: 10.0,
             ),
-
+            Center(
+              child: Padding(
+                padding: EdgeInsets.all(10.0),
+                child: DropdownButton(
+//                isExpanded: true,
+                  value: _value,
+                  items: _values.where((x) {
+//                  print(x);
+//                  print(language);
+                    return language.contains(x['code']);
+                  }).map((value) {
+                    return new DropdownMenuItem(
+                      value: value['code'],
+                      child: new Row(
+                        children: <Widget>[
+                          _langIcon(value['code'].toString()),
+                          new Text('  ${value['label']}'),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    _onChanged(value);
+                  },
+                ),
+              ),
+            ),
             Padding(
               padding: EdgeInsets.all(20.0),
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Text("necromania, necrophilia, necrophilism".toLowerCase(), style: TextStyle(
+                  Text(lemma.toLowerCase(), style: TextStyle(
                     fontSize: 15.0,
                     fontWeight: FontWeight.bold,),
                   ),
-                  Text("an irresistible sexual attraction to dead bodies".toLowerCase(), style: TextStyle(
+                  Text(gloss.toLowerCase(), style: TextStyle(
                     fontSize: 12.0,
                     fontWeight: FontWeight.bold,
-                  ),),
+                  ),
+                  ),
                 ],
               ),
             ),
-
+            Column(
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                  child: new TextField(
+                    enabled: false,
+                    decoration: InputDecoration(
+                      labelText: '',
+                      hintText: '',
+                      hintStyle: TextStyle(color: Colors.grey),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             Divider(
               height: 25.0,
             ),
@@ -117,6 +236,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
   void something(int e){
     setState((){
       if(e == 0){
@@ -127,5 +247,44 @@ class _MyHomePageState extends State<MyHomePage> {
         radioValue = 2;
       }
     });
+  }
+  _langIcon(String value) {
+    if (value == 'eng') {
+      return new Image(
+        image: new AssetImage('images/united-kingdom.png'),
+        width: 25,
+        height: 25,
+      );
+    } else if (value == 'zho') {
+      return new Image(
+        image: new AssetImage('images/china.png'),
+        width: 25,
+        height: 25,
+      );
+    } else if (value == 'deu') {
+      return new Image(
+        image: new AssetImage('images/germany.png'),
+        width: 25,
+        height: 25,
+      );
+    } else if (value == 'fra') {
+      return new Image(
+        image: new AssetImage('images/france.png'),
+        width: 25,
+        height: 25,
+      );
+    } else if (value == 'rus') {
+      return new Image(
+        image: new AssetImage('images/russia.png'),
+        width: 25,
+        height: 25,
+      );
+    } else if (value == 'jpn') {
+      return new Image(
+        image: new AssetImage('images/japan.png'),
+        width: 25,
+        height: 25,
+      );
+    }
   }
 }
