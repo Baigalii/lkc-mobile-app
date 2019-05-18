@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
 import 'package:http/http.dart' as http;
+import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 //Үнэлэх
@@ -137,10 +138,13 @@ class _MyHomePageState extends State<MyHomePage> {
 //          bottom: ,
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () =>  Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PerformanceApp()),
-            ),
+            onPressed: () {
+              _taskType(3);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TaskApp()),
+              );
+            }
           )),
       body: new SingleChildScrollView(
         child: new Column(
@@ -260,6 +264,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+  _taskType(int t) async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("taskNum", t );
   }
 
   _showDialog(BuildContext context) async {

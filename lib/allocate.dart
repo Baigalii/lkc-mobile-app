@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/performance.dart';
+import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
@@ -68,13 +69,19 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
   String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  VoidCallback _showPersBottomSheetCallBack;
 
   @override
   void initState() {
     super.initState();
     _showTranslation();
+    _showPersBottomSheetCallBack = _showBottomSheet;
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    _setTasks();
+
+  }
+  _setTasks() async{
     setState(() {
       _star.add(SmoothStarRating());
       _words.add('');
@@ -82,7 +89,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ratings.add(0);
     });
   }
-
   _showTranslation() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     taskNumber = prefs.getInt("taskNum");
@@ -96,6 +102,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
   }
 
   void _processAllocations(res) async{
+//    _star.add(SmoothStarRating());
+//    _controllers.add(new TextEditingController());
+//    _words.add('');
+//    ratings.add(0);
     try {
       if (res['statusCode'] == 0) {
         gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
@@ -119,6 +129,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
+
   void _onChanged(String value) {
     for (var item in provideWords) {
       if (item['languageCode'] == value) {
@@ -126,7 +137,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         gloss = item['gloss'];
       }
     }
-
     print(value);
     setState(() {
       _value = value;
@@ -138,39 +148,25 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     print("Task list length: ");
     print(provideWords.length);
     return Scaffold(
+      key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Text(widget.title),
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
-          onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => PerformanceApp()),
-              ),
+          onPressed: (){
+            _taskType(1);
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => TaskApp()),
+            );
+          }
         ),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.live_help),
             tooltip: 'Ажлын заавар',
-//            onPressed: () {
-//              showDialog(
-//                  context: context,
-//                  builder: (_) => FlareGiffyDialog(
-//                        flarePath: 'assets/space_demo.flr',
-//                        flareAnimation: 'loading',
-//                        title: Text(
-//                          'Ажлын заавар',
-//                          style: TextStyle(
-//                              fontSize: 22.0, fontWeight: FontWeight.w600),
-//                        ),
-//                        description: new Text(
-//                          'Бид таны оруулсан хувь нэмрийг Монгол НМЦ үүсгэхэд ашиглах болно. Танд баярлалаа.',
-//                          textAlign: TextAlign.center,
-//                          style: TextStyle(),
-//                        ),
-//                        onOkButtonPressed: () {},
-//                      ));
-//            },
+            onPressed: _showModalSheet,
           ),
         ],
       ),
@@ -242,7 +238,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-
 //            Divider(
 //              height: 10.0,
 //            ),
@@ -329,9 +324,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   child: Center(
                     child: FlatButton(
                       padding: EdgeInsets.only(left: 80.0),
-                      onPressed: (){
-                        _sendButton();
-                      },
+                      onPressed: _sendButton,
                       child: Row(
                         // Replace with a Row for horizontal icon + text
                         children: <Widget>[
@@ -354,6 +347,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         ),
       ),
     );
+  }
+  _taskType(int t) async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("taskNum", t );
   }
 
   _showDialog(BuildContext context) async {
@@ -472,7 +469,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   child: new TextField(
                     decoration: InputDecoration(
                       labelText: 'Илэрхийлэх үг',
-                      hintText: '',
                       hintStyle: TextStyle(color: Colors.grey),
                       suffix: IconButton(
                         icon: Icon(Icons.cancel),
@@ -597,6 +593,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         if (taskResult['statusCode'] != 0) {
           prefs.setString("taskID", taskResult['task']['_id'].toString());
           _showTranslation();
+         _controllers.clear();
+         _star.clear();
+         _words.clear();
+         ratings.clear();
+         _setTasks();
         } else {
           _scaffoldKey.currentState.showSnackBar(SnackBar(
             content: Text(_text),
@@ -627,16 +628,99 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         print(res['data']['synset']);
         _onChanged(language[0]);
       }
-//      try {
-//        provideWords = res['data']['synset'];
-//        print("Provide words:");
-//        print(res['data']['synset']);
-//        print(res);
-//      } catch (e) {
-//        print(e);
-//      }
     });
   }
+
+  void _showBottomSheet() {
+    setState(() {
+      _showPersBottomSheetCallBack = null;
+    });
+
+    _scaffoldKey.currentState
+        .showBottomSheet((context) {
+      return new ListView(
+
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: new Text('Ажлын заавар', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 10.0),
+                child: new Text('Гүйцэтгэх ажил: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                child: new Text("* Нутагшуулах ойлголтын англи хэлээр илэрхийлсэн утгыг сайтар ойлгох " + "\n\n"
+                    "* Тухайн ойлголтын утгыг зөв илэрхийлж чадах монгол хэлний ойролцоо утгатай үг(с)ийг оноож бичих" + "\n\n"
+                    "* Оноосон үг бүрд хэр итгэлтэй байгаа өөрийн үнэлгээг өгөх" + "\n\n"
+                    "* Хэрэв ойлголтыг илэрхийлж чадах үг байхгүй гэж үзэж байгаа бол GAP товчийг дарж шалтгааныг бичих", textAlign: TextAlign.left),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 10.0),
+                child: new Text('Санамж: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                child: new Text("* Оноох үг нь үгийн сангийн нэгж (толгой үг, хэлц үг, чөлөөт бус холбоо үг) байх" + "\n\n"
+                    "* Нутагшуулах ойлголтын үгийн аймагт тохирсон үг (n.-нэр, v.-үйл, a.-тэмдэг нэр, d.-дайвар үг) бичих" + "\n\n"
+                    "* Зөвхөн кирилл үсгээр зөв бичих дүрмийн алдаагүй бичих" + "\n\n"
+                    "* Тайлбарлаж эсвэл шууд орчуулж бичихгүй байх" + "\n\n"
+                    "* Англиас бусад хэлээр ойлголтыг зөв илэрхийлээгүй байж болзошгүй тул англи хэлийг эх болгох", textAlign: TextAlign.left),
+              ),
+            ],
+          );
+    })
+        .closed
+        .whenComplete(() {
+      if (mounted) {
+        setState(() {
+          _showPersBottomSheetCallBack = _showBottomSheet;
+        });
+      }
+    });
+  }
+  void _showModalSheet() {
+    showModalBottomSheet(
+        context: context,
+        builder: (builder) {
+          return new ListView(
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.all(10.0),
+                child: new Text('Ажлын заавар', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 10.0),
+                child: new Text('Гүйцэтгэх ажил: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                child: new Text("* Нутагшуулах ойлголтын англи хэлээр илэрхийлсэн утгыг сайтар ойлгох " + "\n\n"
+                    "* Тухайн ойлголтын утгыг зөв илэрхийлж чадах монгол хэлний ойролцоо утгатай үг(с)ийг оноож бичих" + "\n\n"
+                    "* Оноосон үг бүрд хэр итгэлтэй байгаа өөрийн үнэлгээг өгөх" + "\n\n"
+                    "* Хэрэв ойлголтыг илэрхийлж чадах үг байхгүй гэж үзэж байгаа бол GAP товчийг дарж шалтгааныг бичих", textAlign: TextAlign.left),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 10.0),
+                child: new Text('Санамж: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+              ),
+              Padding(
+                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                child: new Text("* Оноох үг нь үгийн сангийн нэгж (толгой үг, хэлц үг, чөлөөт бус холбоо үг) байх" + "\n\n"
+                    "* Нутагшуулах ойлголтын үгийн аймагт тохирсон үг (n.-нэр, v.-үйл, a.-тэмдэг нэр, d.-дайвар үг) бичих" + "\n\n"
+                    "* Зөвхөн кирилл үсгээр зөв бичих дүрмийн алдаагүй бичих" + "\n\n"
+                    "* Тайлбарлаж эсвэл шууд орчуулж бичихгүй байх" + "\n\n"
+                    "* Англиас бусад хэлээр ойлголтыг зөв илэрхийлээгүй байж болзошгүй тул англи хэлийг эх болгох", textAlign: TextAlign.left),
+              ),
+            ],
+          );
+        });
+  }
+
 }
+
+
+
 
 

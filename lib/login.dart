@@ -61,6 +61,7 @@ List<ChoiceOfMenu> choices = <ChoiceOfMenu>[
 
 class _MyHomePageState extends State<MyHomePage> {
   final formKey = GlobalKey<FormState>();
+  bool _validate = false;
   String _email, _password;
   ChoiceOfMenu _selectedChoice = choices[0];
 
@@ -204,26 +205,31 @@ class _MyHomePageState extends State<MyHomePage> {
                           TextFormField(
                             decoration: InputDecoration(
                                 labelText: 'Хэрэглэгчийн нэр* ',
-                                prefixIcon: Icon(Icons.person_outline)),
+                                prefixIcon: Icon(Icons.person_outline),
+                                errorText: _validate ? 'Value Can\'t Be Empty' : null,),
+
                             autocorrect: false,
+                            keyboardType: TextInputType.text,
+                            controller: _controllerUsername,
                             validator: (input) =>
                                 !input.contains('@') && input.isEmpty
                                     ? 'Хэрэглэгчийн нэрээ оруулна уу'
                                     : null,
-                            onSaved: (input) => _email = input,
-                            controller: _controllerUsername,
+                            onSaved: (_controllerUsername) => _email = _controllerUsername,
+
                           ),
                           TextFormField(
                             decoration: InputDecoration(
                                 labelText: 'Нууц үг* ',
                                 prefixIcon: Icon(Icons.lock_outline)),
+                            controller: _controllerPassword,
                             validator: (input) =>
-                                input.length < 8 && input.isEmpty
+                            input.length < 8 && input.isEmpty
                                     ? 'Нууц үгээ оруулна уу'
                                     : null,
                             onSaved: (input) => _password = input,
                             obscureText: true,
-                            controller: _controllerPassword,
+
                           ),
                           Row(
                               mainAxisAlignment: MainAxisAlignment.end,
@@ -246,9 +252,9 @@ class _MyHomePageState extends State<MyHomePage> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               Padding(
-                                padding: const EdgeInsets.all(10.0),
+                                padding: EdgeInsets.symmetric(vertical: 10.0),
                                 child: RaisedButton(
-                                  padding: const EdgeInsets.all(10.0),
+                                  padding: EdgeInsets.symmetric(vertical: 10.0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),
@@ -267,9 +273,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ),
                               ),
                               Padding(
-                                padding: const EdgeInsets.all(10.0),
+                                padding: EdgeInsets.symmetric(vertical: 10.0),
                                 child: RaisedButton(
-                                  padding: const EdgeInsets.all(10.0),
+                                  padding: EdgeInsets.symmetric(vertical: 10.0),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(20.0),
                                   ),

@@ -2,9 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
+import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -68,11 +70,15 @@ class _MyHomePageState extends State<MyHomePage> {
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     startDate = startDate.replaceAll(' ', 'T') + '.000Z';
+    _setControllers();
+
+  }
+
+  _setControllers(){
     setState(() {
       _controllers.add(new TextEditingController());
       _controllerModified.add(new TextEditingController());
     });
-
   }
 
   _showModification() async {
@@ -149,10 +155,13 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () =>  Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PerformanceApp()),
-            ),
+            onPressed: (){
+              _taskType(2);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TaskApp()),
+              );
+            }
           )
       ),
       body: new SingleChildScrollView(
@@ -270,6 +279,11 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+  _taskType(int t) async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("taskNum", t );
+  }
+
   _showDialog(BuildContext context) async {
     return showDialog(
         context: context,
@@ -414,13 +428,10 @@ class _MyHomePageState extends State<MyHomePage> {
       'modification': modificationWords,
     };
     var body = jsonEncode(obj);
-//    print(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/modification";
     var client = new http.Client();
-//    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
-//        '"end_date": "${endDate}", "modification": modificationWords }';
     client.post(url, body: body, headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/plain, */*',
@@ -428,7 +439,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
-
+      Fluttertoast.showToast(msg: "Амжилттай илгээлээ!");
       client.get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
@@ -440,6 +451,8 @@ class _MyHomePageState extends State<MyHomePage> {
         if (taskResult['statusCode'] != 0) {
           prefs.setString("taskID", taskResult['task']['_id'].toString());
           _showModification();
+          _controllers.clear();
+          _controllerModified.clear();
         } else {
           _scaffoldKey.currentState.showSnackBar(SnackBar(
             content: Text(_text),

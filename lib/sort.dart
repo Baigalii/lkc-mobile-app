@@ -6,6 +6,7 @@ import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
 import 'package:http/http.dart' as http;
 import 'package:draggable_flutter_list/draggable_flutter_list.dart';
+import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 //Эрэмбэлэх
@@ -122,10 +123,13 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () =>  Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => PerformanceApp()),
-            ),
+            onPressed: () {
+              _taskType(6);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TaskApp()),
+              );
+            }
           )),
       body: new Column(
         mainAxisSize: MainAxisSize.min,
@@ -250,6 +254,12 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  _taskType(int t) async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("taskNum", t );
+  }
+
   _sendButton()async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);

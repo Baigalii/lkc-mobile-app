@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:lkc/performance.dart';
 import 'package:http/http.dart' as http;
+import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 //Орчуулах
@@ -40,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List translationWords = [];
   List language = [];
   var controller = new TextEditingController();
+  var controllerTranslate = new TextEditingController();
   var targetWords;
   var taskId;
   String gloss = '', lemma = '', targetWord = '';
@@ -133,10 +135,13 @@ class _MyHomePageState extends State<MyHomePage> {
           title: Text(widget.title),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PerformanceApp()),
-                ),
+            onPressed: () {
+              _taskType(4);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => TaskApp()),
+              );
+            }
           )),
       body: new SingleChildScrollView(
         child: new Column(
@@ -250,6 +255,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                           ),
                           maxLength: 256,
+                          controller: controllerTranslate,
                         ),
                       )),
                 ),
@@ -313,33 +319,59 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
+  _taskType(int t) async{
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("taskNum", t );
+  }
+
   void _sendButton() async {
       DateTime now = DateTime.now();
       endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
       //2019-04-30T07:24:53.887Z
 
-      Map data = {
+      Map obj = {
         'taskId': "${taskId}",
         'domainId': "${domainId}",
         'start_date': "${startDate}",
         'end_date': "${endDate}",
-        'translation': "${controller.text}",
+        'translation': "${controllerTranslate.text}",
         'translationType': "GlossTranslation",
       };
+      var body = jsonEncode(obj);
+      var prefs = await SharedPreferences.getInstance();
+      var token = prefs.getString('token');
+      var url = "http://lkc.num.edu.mn/translation";
+      var client = new http.Client();
+      client.post(url, body: body, headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/plain, */*',
+        'Authorization': token,
+      }).then((response) async {
+        print("Response status: ${response.statusCode}");
+        print("Response body: ${response.body}");
+        Fluttertoast.showToast(msg: "Амжилттай илгээлээ!");
+        client.get('http://lkc.num.edu.mn/task/4/' + domainId.toString(), headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
+          'Authorization': token,
+        }).then((result) {
+          print(result.body);
+//        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
+          var taskResult = jsonDecode(result.body);
+          if (taskResult['statusCode'] != 0) {
+            prefs.setString("taskID", taskResult['task']['_id'].toString());
+            _showTranslation();
+            controllerTranslate.text = " ";
+          } else {
+            _scaffoldKey.currentState.showSnackBar(SnackBar(
+              content: Text(_text),
+              duration: Duration(seconds: 5),
+            ));
+          }
+        });
+      });
 
-      var body = jsonEncode(data);
-      print(body);
-//      var prefs = await SharedPreferences.getInstance();
-//      var token = prefs.getString('token');
-//      var url = "http://lkc.num.edu.mn/translation";
-//      http.post(url,
-//          headers: {'Content-Type': 'application/json', 'Authorization': token},
-//          body: body
-//      )
-//          .then((response) async {
-//        print("Response status: ${response.statusCode}");
-//        print("Response body: ${response.body}");
-//      });
     }
 
   _skipButton() async{
@@ -374,6 +406,7 @@ class _MyHomePageState extends State<MyHomePage> {
       if (taskResult['statusCode'] != 0) {
         prefs.setString("taskID", taskResult['task']['_id'].toString());
         _showTranslation();
+
       } else {
         _scaffoldKey.currentState.showSnackBar(SnackBar(
           content: Text(_text),
