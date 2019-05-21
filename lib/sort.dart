@@ -40,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List sortWords = [];
   List modifiedGlosses = [];
   List language = [];
+  List priority = [];
   var taskId;
   int domainId;
   int taskNumber;
@@ -193,7 +194,12 @@ class _MyHomePageState extends State<MyHomePage> {
                 return new SizedBox(
                   child: new Card(
                     child: new ListTile(
-                      title: new Text(modifiedGlosses[index]['gloss']),
+                      title: new Row(
+                        children: <Widget>[
+                          new Text(modifiedGlosses[index]['_id'].toString() + " "),
+                          new Text(modifiedGlosses[index]['gloss']),
+                        ],
+                      )
                     ),
                   ),
                 );
@@ -207,6 +213,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   modifiedGlosses.removeAt(before);
                   modifiedGlosses.insert(after, data);
                 });
+                print("Priority");
+                print(priority);
               },
               canDrag: (index) {
                 print('can drag $index');
@@ -263,6 +271,15 @@ class _MyHomePageState extends State<MyHomePage> {
   _sendButton()async{
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd – kk:mm').format(now);
+    var modifiedWords = [];
+    for(var i=0; i <= modifiedGlosses.length; i++){
+      modifiedWords.add({
+        'gloss': modifiedGlosses[i]["gloss"],
+        '_id': modifiedGlosses[i]["_id"],
+//        'priority':
+      });
+    }
+
     Map obj = {
       'taskId': "${taskId}",
       'domainId': "${domainId}",
