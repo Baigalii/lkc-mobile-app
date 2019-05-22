@@ -194,10 +194,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 return new SizedBox(
                   child: new Card(
                     child: new ListTile(
-                      title: new Row(
+                      title: new Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
-                          new Text(modifiedGlosses[index]['_id'].toString() + " "),
-                          new Text(modifiedGlosses[index]['gloss']),
+                          new Text(modifiedGlosses[index]['_id'].toString() + "   " +modifiedGlosses[index]['gloss'], softWrap: true,),
                         ],
                       )
                     ),

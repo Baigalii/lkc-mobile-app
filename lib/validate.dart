@@ -504,7 +504,8 @@ class _MyHomePageState extends State<MyHomePage> {
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true }';
+    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
+        ' "end_date": "${endDate}", "skip": true }';
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/validation";
