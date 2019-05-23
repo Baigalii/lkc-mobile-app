@@ -73,6 +73,9 @@ class _MyHomePageState extends State<MyHomePage> {
     domainId = prefs.getInt("gid");
     taskId = prefs.getString("taskID");
 
+    domainId = 119;
+    taskId = "5c99ce76b013d855237c97bd";
+
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/translation/prev?domain=" + domainId.toString() + "&task=" + taskId.toString();
     http.get(url,  headers: {
