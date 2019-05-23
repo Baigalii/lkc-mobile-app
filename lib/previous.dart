@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:lkc/task.dart';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 
@@ -31,15 +34,17 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   List prevWords = [];
+  List translateWord = [];
   List language = [];
   double rating = 3.5;
   int radioValue;
   var taskId;
   var data;
+  var taskResult;
   int domainId;
   int taskNumber;
   String startDate, endDate;
-  String gloss = '', lemma = '';
+  String gloss = '', lemma = '', taskName;
   String _value = 'eng';
   List<Map> _values = [
     {'code': 'eng', 'label': 'English'},
@@ -65,19 +70,30 @@ class _MyHomePageState extends State<MyHomePage> {
   _showPrev() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     taskNumber = prefs.getInt("taskNum");
-    String taskName = "translation";
     domainId = prefs.getInt("gid");
     taskId = prefs.getString("taskID");
-    getPrevTask(taskName, domainId, taskId).then((res) {
+
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/translation/prev?domain=" + domainId.toString() + "&task=" + taskId.toString();
+    http.get(url,  headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((response) async {
+//      taskResult = jsonDecode(response.body);
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
       setState(() {
-        _processPrevWords(res);
+        _processPrevWords(response);
       });
     });
+
   }
 
   void _processPrevWords(res) async{
     try {
         prevWords = res['data']['synset'];
+        translateWord = res['data']['translation'];
         data = res['data'];
         var t = res['data']['synset'] as List;
         var codes = t.map((x) {
@@ -107,8 +123,11 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+
   @override
   Widget build(BuildContext context) {
+    print("prevWords->");
+    print(prevWords.length);
     return Scaffold(
       appBar: AppBar(
           title: Text(widget.title),
@@ -205,7 +224,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 10.0),
                   child: new  FlatButton(
-                    onPressed: () => {},
+                    onPressed: () => {
+
+                    },
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
@@ -219,7 +240,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 Padding(
                   padding: EdgeInsets.only(left: 150.0, right: 5.0),
                   child: new FlatButton(
-                    onPressed: () => {},
+                    onPressed: () => {
+
+                    },
                     padding: EdgeInsets.all(10.0),
                     child: Row( // Replace with a Row for horizontal icon + text
                       children: <Widget>[
