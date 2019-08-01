@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:lkc/screen/other/guidelines.dart';
+import 'package:lkc/screen/other/project.dart';
 import 'package:lkc/screen/tasks/allocate.dart';
-import 'package:lkc/other/guidelines.dart';
 import 'package:lkc/screen/login/login.dart';
 import 'package:lkc/screen/tasks/modify.dart';
 import 'package:lkc/screen/tasks/performance.dart';
 import 'package:lkc/screen/tasks/previous.dart';
-import 'package:lkc/other/project.dart';
 import 'package:lkc/screen/tasks/rearrange.dart';
 import 'package:lkc/screen/register/register.dart';
 import 'package:lkc/screen/login/resetpass.dart';
