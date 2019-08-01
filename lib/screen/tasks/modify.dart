@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lkc/networklayer.dart';
+import 'package:lkc/service/networklayer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'chooselanguage.dart';
+import 'package:lkc/screen/tasks/chooselanguage.dart';
 
 //Найруулах
 class ModifyApp extends StatefulWidget {

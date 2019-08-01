@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lkc/networklayer.dart';
+import 'package:lkc/service/networklayer.dart';
 import 'package:http/http.dart' as http;
 import 'package:draggable_flutter_list/draggable_flutter_list.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'chooselanguage.dart';
+import 'package:lkc/screen/tasks/chooselanguage.dart';
 
 //Эрэмбэлэх
 class SortApp extends StatefulWidget {

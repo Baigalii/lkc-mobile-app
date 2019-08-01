@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:lkc/allocate.dart';
-import 'package:lkc/guidelines.dart';
-import 'package:lkc/login.dart';
-import 'package:lkc/modify.dart';
-import 'package:lkc/performance.dart';
-import 'package:lkc/previous.dart';
-import 'package:lkc/project.dart';
-import 'package:lkc/rearrange.dart';
-import 'package:lkc/register.dart';
-import 'package:lkc/resetpass.dart';
-import 'package:lkc/sort.dart';
-import 'package:lkc/task.dart';
-import 'package:lkc/translate.dart';
-import 'package:lkc/validate.dart';
+import 'package:lkc/screen/tasks/allocate.dart';
+import 'package:lkc/other/guidelines.dart';
+import 'package:lkc/screen/login/login.dart';
+import 'package:lkc/screen/tasks/modify.dart';
+import 'package:lkc/screen/tasks/performance.dart';
+import 'package:lkc/screen/tasks/previous.dart';
+import 'package:lkc/other/project.dart';
+import 'package:lkc/screen/tasks/rearrange.dart';
+import 'package:lkc/screen/register/register.dart';
+import 'package:lkc/screen/login/resetpass.dart';
+import 'package:lkc/screen/tasks/sort.dart';
+import 'package:lkc/screen/tasks/task.dart';
+import 'package:lkc/screen/tasks/translate.dart';
+import 'package:lkc/screen/tasks/validate.dart';
 
 var routes = <String, WidgetBuilder>{
   "/": (BuildContext context) => new LoginApp(),

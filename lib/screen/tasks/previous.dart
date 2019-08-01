@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'chooselanguage.dart';
+import 'package:lkc/screen/tasks/chooselanguage.dart';
 
 class PreviousApp extends StatefulWidget {
   @override

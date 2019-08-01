@@ -1,31 +1,28 @@
 import 'dart:convert';
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
-import 'package:lkc/networklayer.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lkc/service/networklayer.dart';
 import 'package:http/http.dart' as http;
-import 'chooselanguage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:lkc/screen/tasks/chooselanguage.dart';
 
-//Засварлах
-class RearrangeApp extends StatefulWidget {
+//Үнэлэх
+class ValidateApp extends StatefulWidget {
   @override
-  _RearrangeAppState createState() => _RearrangeAppState();
+  _ValidateAppState createState() => _ValidateAppState();
 }
 
-class _RearrangeAppState extends State<RearrangeApp> {
-  List<TextEditingController> _controllers = [];
-  List<TextEditingController> _controllerModified = [];
-  TextEditingController _textFieldController = TextEditingController();
-  List rearrangeWords = [];
-  List translatedWords = [];
+class _ValidateAppState extends State<ValidateApp> {
+  int radioValue;
   List language = [];
-  double rating = 3.5;
+
+  List<TextEditingController> txtController = [];
+  TextEditingController _textFieldController = TextEditingController();
+  List validationWords = [];
+  List modifiedWords = [];
+  List _ratings = [];
   var taskId;
-  var preWord = [];
-  var postWord = [];
   int domainId;
   int taskNumber;
   String startDate, endDate;
@@ -47,67 +44,46 @@ class _RearrangeAppState extends State<RearrangeApp> {
 
   void initState() {
     super.initState();
-    _showModification();
+    _showValidation();
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     startDate = startDate.replaceAll(' ', 'T') + '.000Z';
-    _setControllers();
   }
 
-  _setControllers() {
-    setState(() {
-      _controllers.add(new TextEditingController());
-      _controllerModified.add(new TextEditingController());
-    });
-  }
-
-  _showModification() async {
+  _showValidation() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     domainId = prefs.getInt("gid");
-    taskNumber = prefs.getInt('taskNum');
+    taskNumber = prefs.getInt("taskNum");
     taskId = prefs.getString("taskID");
-    print("Task type number");
-
-    DateTime now = DateTime.now();
-    startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
-    startDate = startDate.replaceAll(' ', 'T') + '.000Z';
-
     fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
-        _processModifications(res);
+        _processValidations(res);
       });
     });
   }
 
-  void _processModifications(res) async {
+  _processValidations(res) async {
     try {
       if (res['statusCode'] == 0) {
         gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
-            'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
-            ' Өөр айд шилжинэ үү.';
+            'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
       } else {
-        rearrangeWords = res['task']['synset'];
-        translatedWords = res['task']['translatedWords'];
+        validationWords = res['task']['synset'];
+        modifiedWords = res['task']['modifiedWords'];
         var t = res['task']['synset'] as List;
         var codes = t.map((x) {
           return x['languageCode'];
         }).toList();
         language = codes;
-        print("Modification words:");
+        print("Validation words:");
         print(res['task']['synset']);
-
-        for (var i in rearrangeWords) {
+        for (var i in validationWords) {
           if (i['languageCode'] == _value) {
             lemma = i['lemma'];
             gloss = i['gloss'];
           }
         }
-
-        for (var i = 0; i < translatedWords.length; i++) {
-          _controllers
-              .add(TextEditingController(text: translatedWords[i]['word']));
-          _controllerModified.add(new TextEditingController());
-        }
+        _ratings = List(modifiedWords.length);
       }
     } catch (e) {
       print(e);
@@ -115,25 +91,29 @@ class _RearrangeAppState extends State<RearrangeApp> {
   }
 
   void _onChanged(String value) {
-    for (var item in rearrangeWords) {
+    for (var item in validationWords) {
       if (item['languageCode'] == value) {
         lemma = item['lemma'];
         gloss = item['gloss'];
       }
     }
-
     setState(() {
       _value = value;
     });
   }
 
+  void dispose() {
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    print(modifiedWords);
     return Scaffold(
-      key: _scaffoldKey,
       appBar: AppBar(
+//          bottom: ,
           title: Text(
-            "Засварлах",
+            "Үнэлэх",
             style: TextStyle(color: Colors.white, fontSize: 20.0),
             textAlign: TextAlign.center,
           ),
@@ -141,7 +121,7 @@ class _RearrangeAppState extends State<RearrangeApp> {
           leading: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () {
-                _taskType(2);
+                _taskType(3);
                 Navigator.pushNamed(context, '/task');
               })),
       body: new SingleChildScrollView(
@@ -153,7 +133,7 @@ class _RearrangeAppState extends State<RearrangeApp> {
             Padding(
               padding: EdgeInsets.all(20.0),
               child: new Text(
-                'Дараах ойлголтыг илэрхийлэх монгол үг(с)ийн алдааг засах эсвэл алдаатай үгсийг хасна уу',
+                'Дараах ойлголтыг илэрхийлэх монгол үг(с)ээс оновчтой тохирохыг нь үнэлнэ үү',
                 style: new TextStyle(
                   fontSize: 12.0,
                 ),
@@ -172,7 +152,9 @@ class _RearrangeAppState extends State<RearrangeApp> {
                     value: value['code'],
                     child: new Row(
                       children: <Widget>[
+//                        new Icon(Icons.language),
                         LangIcon(value['code'].toString()),
+//                        _langIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
@@ -184,10 +166,9 @@ class _RearrangeAppState extends State<RearrangeApp> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+              padding: EdgeInsets.all(20.0),
               child: new Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
                   Text(
                     lemma.toLowerCase(),
@@ -206,11 +187,9 @@ class _RearrangeAppState extends State<RearrangeApp> {
                 ],
               ),
             ),
-            Divider(
-              height: 10.0,
-            ),
             Column(
-              children: _buildWords(context),
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: _validateWords(context),
             ),
             Divider(
               height: 25.0,
@@ -247,6 +226,7 @@ class _RearrangeAppState extends State<RearrangeApp> {
                       onPressed: _skipButton,
                       padding: EdgeInsets.all(10.0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         // Replace with a Row for horizontal icon + text
                         children: <Widget>[
                           Text(
@@ -262,9 +242,17 @@ class _RearrangeAppState extends State<RearrangeApp> {
                   child: Padding(
                     padding: EdgeInsets.only(left: 10.0, right: 5.0),
                     child: new FlatButton(
-                      onPressed: _sendButton,
+                      onPressed: () {
+                        if (_ratings.length == 0) {
+                          Fluttertoast.showToast(
+                              msg: "Илгээх өгөгдөл байхгүй байна.");
+                        } else {
+                          _sendButton();
+                        }
+                      },
                       padding: EdgeInsets.all(10.0),
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         // Replace with a Row for horizontal icon + text
                         children: <Widget>[
                           Text(
@@ -275,7 +263,7 @@ class _RearrangeAppState extends State<RearrangeApp> {
                       ),
                     ),
                   ),
-                ),
+                )
               ],
             ),
           ],
@@ -308,10 +296,10 @@ class _RearrangeAppState extends State<RearrangeApp> {
               new FlatButton(
                 child: new Text('OK'),
                 onPressed: () async {
-                  var modificationGap = [];
-                  modificationGap.add({
-                    'preWord': "GAP",
-                    'postWord': "GAP",
+                  var validationsGap = [];
+                  validationsGap.add({
+                    'words': "GAP",
+                    'rating': 5,
                   });
 
                   DateTime now = DateTime.now();
@@ -324,12 +312,12 @@ class _RearrangeAppState extends State<RearrangeApp> {
                     'gapReason': "${_textFieldController.text}",
                     'start_date': "${startDate}",
                     'end_date': "${endDate}",
-                    'modification': modificationGap,
+                    'validations': validationsGap,
                   });
                   print(obj);
                   var prefs = await SharedPreferences.getInstance();
                   var token = prefs.getString('token');
-                  var url = "http://lkc.num.edu.mn/modification";
+                  var url = "http://lkc.num.edu.mn/validation";
                   http.post(url, body: obj, headers: {
                     'Content-Type': 'application/json',
                     'Authorization': token,
@@ -351,64 +339,114 @@ class _RearrangeAppState extends State<RearrangeApp> {
         });
   }
 
-  _buildWords(BuildContext context) {
+  void something(int e) {
+    setState(() {
+      if (e == 0) {
+        radioValue = 0;
+      } else if (e == 1) {
+        radioValue = 1;
+      } else if (e == 2) {
+        radioValue = 2;
+      }
+    });
+  }
+
+  _validateWords(BuildContext context) {
     var children = <Widget>[];
-    for (var i = 0; i < translatedWords.length; i++) {
+    for (var i = 0; i < modifiedWords.length; i++) {
       var controller = new TextEditingController();
-      var controllerModified = _controllerModified[i];
-      controller.text = translatedWords[i]['word'];
+      controller.text = modifiedWords[i]['word'];
       children.add(Column(
         children: <Widget>[
           Padding(
-            padding: EdgeInsets.only(left: 20.0, right: 20.0),
+            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
             child: new TextField(
               enabled: false,
               decoration: InputDecoration(
-                labelText: '',
-                hintText: '',
                 hintStyle: TextStyle(color: Colors.grey),
+                border: new OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5.0),
+                ),
               ),
               controller: controller,
             ),
           ),
-          Row(
-            children: <Widget>[
-              Expanded(
-                  child: Padding(
-                padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                child: new TextField(
-                  decoration: InputDecoration(
-                    suffix: IconButton(
-                      icon: Icon(Icons.spellcheck),
-                      onPressed: () {
-                        print('spellcheck pressed');
-                        print(controllerModified.text =
-                            translatedWords[i]['word']);
-                        controllerModified.text = translatedWords[i]['word'];
-                      },
-                    ),
-                    fillColor: Colors.blueAccent,
-                    labelText: '',
-                    hintText: 'Засвар үг',
-                    hintStyle: TextStyle(color: Colors.grey),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
+            child: Row(
+              children: <Widget>[
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 5.0, horizontal: 20.0),
+                  child: Row(
+                    children: <Widget>[
+                      new Radio(
+                        onChanged: (value) {
+                          setState(() {
+//                            correct[i] = value;
+                            _ratings[i] = value;
+                          });
+                        },
+                        activeColor: Colors.indigo,
+                        groupValue: _ratings[i],
+                        value: 0,
+                      ),
+                      new Icon(
+                        Icons.check,
+                        color: Colors.indigo,
+                      ),
+                    ],
                   ),
-                  controller: controllerModified,
                 ),
-              )),
-              IconButton(
-                padding: EdgeInsets.only(left: 20.0, right: 20),
-                color: Colors.red,
-                icon: Icon(Icons.remove_circle),
-                alignment: Alignment.bottomLeft,
-                onPressed: () {
-                  setState(() {
-                    print(i);
-                    translatedWords.removeAt(i);
-                    _controllers.removeAt(i);
-                  });
-                },
-              ),
-            ],
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  child: Row(
+                    children: <Widget>[
+                      new Radio(
+                        onChanged: (value) {
+                          setState(() {
+                            //wrong[i] = value;
+                            _ratings[i] = value;
+                          });
+                        },
+                        activeColor: Colors.red,
+                        groupValue: _ratings[i],
+                        value: 1,
+                      ),
+                      new Icon(
+                        Icons.clear,
+                        color: Colors.red,
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  child: Row(
+                    children: <Widget>[
+                      new Radio(
+                        onChanged: (value) {
+                          setState(() {
+                            //unfamiliar[i] = value;
+                            _ratings[i] = value;
+                            print(_ratings);
+                          });
+                        },
+                        activeColor: Colors.pink,
+                        groupValue: _ratings[i],
+                        value: 2,
+                      ),
+                      new Icon(
+                        Icons.sentiment_very_dissatisfied,
+                        color: Colors.pink,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ));
@@ -417,40 +455,41 @@ class _RearrangeAppState extends State<RearrangeApp> {
   }
 
   _sendButton() async {
-    var modificationWords = [];
-    for (var i = 0; i < translatedWords.length; i++) {
-      modificationWords.add({
-        'preWord': translatedWords[i]['word'],
-        'postWord': _controllerModified[i].text,
+    var validationWords = [];
+    for (var i = 0; i < modifiedWords.length; i++) {
+      validationWords.add({
+        'lemma': modifiedWords[i]['word'],
+        'rating': _ratings[i],
       });
     }
-    print("_controllers.length: ");
-    print(_controllers.length);
+
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
+
     Map obj = {
       'taskId': "${taskId}",
       'domainId': "${domainId}",
       'start_date': "${startDate}",
       'end_date': "${endDate}",
-      'modification': modificationWords,
+      'validations': validationWords,
     };
-    var body = jsonEncode(obj);
+    print(obj);
+    var _body = jsonEncode(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
-    var url = "http://lkc.num.edu.mn/modification";
+    var url = "http://lkc.num.edu.mn/validation";
     var client = new http.Client();
-    client.post(url, body: body, headers: {
+    client.post(url, body: _body, headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/plain, */*',
       'Authorization': token,
     }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
-      Fluttertoast.showToast(msg: "Амжилттай илгээлээ!");
+
       client
-          .get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
+          .get('http://lkc.num.edu.mn/task/3/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
@@ -460,9 +499,7 @@ class _RearrangeAppState extends State<RearrangeApp> {
         var taskResult = jsonDecode(result.body);
         if (taskResult['statusCode'] != 0) {
           prefs.setString("taskID", taskResult['task']['_id'].toString());
-          _showModification();
-          _controllers.clear();
-          _controllerModified.clear();
+          _showValidation();
         } else {
           _scaffoldKey.currentState.showSnackBar(SnackBar(
             content: Text(_text),
@@ -478,16 +515,14 @@ class _RearrangeAppState extends State<RearrangeApp> {
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
+    var _body =
+        '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
+        ' "end_date": "${endDate}", "skip": true }';
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
-    var url = "http://lkc.num.edu.mn/modification";
+    var url = "http://lkc.num.edu.mn/validation";
     var client = new http.Client();
 
-    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", '
-        '"start_date": "${startDate}", "end_date": "${endDate}", "skip": true }';
-    print(_body);
-    print("Domain id:");
-    print(domainId);
     client.post(url, body: _body, headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/plain, */*',
@@ -495,26 +530,25 @@ class _RearrangeAppState extends State<RearrangeApp> {
     }).then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
+    });
 
-      client
-          .get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json, text/plain, */*',
-        'Authorization': token,
-      }).then((result) {
-        print(result.body);
+    client.get('http://lkc.num.edu.mn/task/3/' + domainId.toString(), headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((result) {
+      print(result.body);
 //        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
-        var taskResult = jsonDecode(result.body);
-        if (taskResult['statusCode'] != 0) {
-          prefs.setString("taskID", taskResult['task']['_id'].toString());
-          _showModification();
-        } else {
-          _scaffoldKey.currentState.showSnackBar(SnackBar(
-            content: Text(_text),
-            duration: Duration(seconds: 5),
-          ));
-        }
-      });
+      var taskResult = jsonDecode(result.body);
+      if (taskResult['statusCode'] != 0) {
+        prefs.setString("taskID", taskResult['task']['_id'].toString());
+        _showValidation();
+      } else {
+        _scaffoldKey.currentState.showSnackBar(SnackBar(
+          content: Text(_text),
+          duration: Duration(seconds: 5),
+        ));
+      }
     });
   }
 }
