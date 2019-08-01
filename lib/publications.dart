@@ -1,47 +1,24 @@
 import 'package:flutter/material.dart';
-import 'package:lkc/guidelines.dart';
-import 'package:lkc/login.dart';
 
-
-void main() => runApp(PublicationsApp());
-
-class PublicationsApp extends StatelessWidget {
-  // This widget is the root of your application.
+class PublicationsApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Нүүр хэсэг',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Нийтлэл'),
-    );
-  }
+  _PublicationsAppState createState() => _PublicationsAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
+class _PublicationsAppState extends State<PublicationsApp> {
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
         appBar: AppBar(
-          title: Text(widget.title),
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => LoginApp()),
-            ),
+          title: Text(
+            "Нийтлэл",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
           ),
+          centerTitle: true,
+          leading: IconButton(
+              icon: Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pushNamed(context, '/')),
         ),
         body: new SingleChildScrollView(
           child: new Column(
@@ -51,23 +28,28 @@ class _MyHomePageState extends State<MyHomePage> {
               Padding(
                 padding: EdgeInsets.only(right: 20.0, top: 20.0, left: 20.0),
                 child: new Text("mongolian lkc".toUpperCase(),
-                    style: TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
+                    style:
+                        TextStyle(fontSize: 25.0, fontWeight: FontWeight.bold),
                     textAlign: TextAlign.justify),
               ),
               Padding(
                 padding: EdgeInsets.only(top: 0.0, left: 20.0, right: 20.0),
-                child: new Text("(Монгол Нутгийн Мэдлэгийн Цөмийг үүсгэх төслийн тухайд)",
+                child: new Text(
+                    "(Монгол Нутгийн Мэдлэгийн Цөмийг үүсгэх төслийн тухайд)",
                     style: TextStyle(fontSize: 15.0),
                     textAlign: TextAlign.justify),
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 20.0),
-                child: new Text("агуулга".toUpperCase(),
-                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold), ),
+                child: new Text(
+                  "агуулга".toUpperCase(),
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                ),
               ),
               Padding(
-                padding: EdgeInsets.only(right: 20.0, left: 20.0, top:10.0 ),
-                child: new Text(" Оршил"
+                padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
+                child: new Text(
+                    " Оршил"
                     "\n\n Төслийн тухай"
                     "\n\n Холбоо барих",
                     style: TextStyle(fontSize: 15.0),
@@ -75,12 +57,15 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 20.0),
-                child: new Text("оршил".toUpperCase(),
-                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold), ),
+                child: new Text(
+                  "оршил".toUpperCase(),
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
-                child: new Text('   Таны хэрэглэж байгаа аппликейшн таны оруулсан өгөгдлийг утгачлан задлаж ойлгоод, '
+                child: new Text(
+                    '   Таны хэрэглэж байгаа аппликейшн таны оруулсан өгөгдлийг утгачлан задлаж ойлгоод, '
                     'ойлгосон санаагаараа хайлт хийгээд зогсохгүй өөр эх сурвалжуудаас ухаж олсон өгөгдлүүдээ '
                     'тодорхой нэг хэлбэрт хэлбэршүүлж нэгтгээд эсвэл холбоод гаргаж үзүүлдэг үйлчилгээтэй бол '
                     'гар ажиллагааг хэдий чинээ хөнгөвчилнө гэж төсөөлөгдөж байна даа?'
@@ -97,17 +82,17 @@ class _MyHomePageState extends State<MyHomePage> {
                     'хүрээнд яригдах логикийн өчүүхэн нэг хэсэг нь. Бид энэ логикийг төвөггүй ойлгоод '
                     '"хоттой хонио чоноос хамгаалах хэрэгтэй" гэсэн дүгнэлтэд хүрч болох ч чоно, хонь, '
                     'амьтан гэх мэт ойлголтуудыг мэддэггүй байсан бол уг логикийг ашиглаж чадах байсан'
-                    'эдэг нь мөн эргэлзээтэй.Тэгвэл машины хувьд ч ижил хэрэг. '
-                    , textAlign: TextAlign.justify),
+                    'эдэг нь мөн эргэлзээтэй.Тэгвэл машины хувьд ч ижил хэрэг. ',
+                    textAlign: TextAlign.justify),
               ),
               Padding(
                 padding: EdgeInsets.all(20.0),
-                child: new Image(
-                    image: new AssetImage("images/ontology.png")),
+                child: new Image(image: new AssetImage("images/ontology.png")),
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
-                child: new Text("     Бид орчлон хорвоо дээр өөрсдийн мэдрэхүйгээрээ хүлээн авч,"
+                child: new Text(
+                    "     Бид орчлон хорвоо дээр өөрсдийн мэдрэхүйгээрээ хүлээн авч,"
                     " ойлгодог тэрхүү ойлголтуудаа машинд ойлгуулсан цагт сая бид чанартай семантик "
                     "үйлчилгээг ярьж эхлэх юм. Дээрх зурагт өмнө дурьдсан ойлголтууд ба тэдгээрийн "
                     "холбоог дүрсэлснийг онтологи гэж нэрлээд, компьютерт OWL хэлээр загварчилдаг. "
@@ -120,42 +105,47 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               Padding(
                 padding: EdgeInsets.all(20.0),
-                child: new Image(
-                    image: new AssetImage("images/lkc.png")),
+                child: new Image(image: new AssetImage("images/lkc.png")),
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
-                child: new Text("     Жишээлбэл, дээрх зурагт бидний хэлж заншсан тоглоом гэдэг үг нь 2 утга "
+                child: new Text(
+                    "     Жишээлбэл, дээрх зурагт бидний хэлж заншсан тоглоом гэдэг үг нь 2 утга "
                     "(нэг нь хүүхдийн тоглодог тоглоом, нөгөө нь дүрэмтэй тэмцээн) илэрхийлдэг, утгууд "
                     "нь тус тусдаа оршиж байдаг бол Англи хэлэнд тус бүрт нь зориулсан (toy, game) үгс байдаг."
                     " Өөр нэг жишээ үзвэл, монгол гэр гэдэг ойлголт оршдог хэдий ч зөвхөн Монгол НМЦ-д байх "
                     "агаад бусад НМЦ-д оршихгүй юм. Учир нь энэ нь зөвхөн Монгол соёлд маань байдаг өвөрмөц "
                     "ойлголт учраас тэр. Энэ зарчмаар хэлний ялгаатай байдлууд үүсдэг нь хэл тус бүрт НМЦ"
-                    " үүсгэх анхдагч шалтгаан болжээ.", textAlign: TextAlign.justify
+                    " үүсгэх анхдагч шалтгаан болжээ.",
+                    textAlign: TextAlign.justify),
+              ),
+              Padding(
+                padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
+                child: new Text(
+                  "төслийн тухай".toUpperCase(),
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
                 ),
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
-                child: new Text("төслийн тухай".toUpperCase(),
-                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold), ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
-                child: new Text('     Бид энэ төслийн ажлаар Монгол НМЦ-ийг олны хүчээр үүсгэх зорилготой байгаа. '
+                child: new Text(
+                    '     Бид энэ төслийн ажлаар Монгол НМЦ-ийг олны хүчээр үүсгэх зорилготой байгаа. '
                     'Ертөнцийн ойлголтуудын логик уялдаа холбоо нь хэлнээс хамаарахгүйгээр оршдог бөгөөд '
                     'олон хэл дээр загварчлагдсан байдаг. Ойлголтуудыг тэдгээр хэлүүдээс Монгол хэл рүү '
                     'орчуулах замаар нутагшуулах аргачлалыг турших зорилгоор энэ системийг ашиглаж байгаа билээ.'
                     '\n\n     Нэг ойлголтыг бид ойролцоо утгатай үгсээр илэрхийлдэг. '
-                    'Жишээлбэл: "аав, эцэг", "анчин, гөрөөчин, ангууч" гэх мэт.', textAlign: TextAlign.justify),
+                    'Жишээлбэл: "аав, эцэг", "анчин, гөрөөчин, ангууч" гэх мэт.',
+                    textAlign: TextAlign.justify),
               ),
               Padding(
                 padding: EdgeInsets.all(20.0),
-                child: new Image(
-                    image: new AssetImage("images/localization.png")),
+                child:
+                    new Image(image: new AssetImage("images/localization.png")),
               ),
               Padding(
                 padding: EdgeInsets.only(right: 20.0, left: 20.0, top: 10.0),
-                child: new Text("     Системийн үйл ажиллагаа нь олны хүчийг ашиглан Монгол хэл дээрх ойлголтуудыг"
+                child: new Text(
+                    "     Системийн үйл ажиллагаа нь олны хүчийг ашиглан Монгол хэл дээрх ойлголтуудыг"
                     " гаргаж авах гурван фазаас тогтоно:"
                     "\n\n 1. Орчуулах - Энэ фазд оролцогч олон хэлээр илэрхийлсэн ойлголтод тохирох монгол үгийг оноож бичнэ"
                     "\n\n 2. Засварлах - Энэ фазд оролцогч ойлголтод тохирох монгол үгийн алдааг засна (тохиромжгүй үгийг хасах,"
@@ -168,12 +158,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     "сурахад дэмжлэг үзүүлэх, компьютер дээрх монгол хэлний нөөцийг баяжуулах зэрэг нь онц ач холбогдолтой аж. "
                     "Ирээдүйд оюунлаг машинууд хоорондоо харилцаж хүний амьдралд тусалдаг болох тэр үед Монгол улсыг бэлэн байлгах,"
                     " Монгол машин бусад орны машинуудтай улсаа төлөөлөн харилцан ажиллахад суурь мэдлэг болно."
-                    "\n\n    Таны оруулж буй хувь нэмэрт бид гүнээ талархаж байна!\n", textAlign: TextAlign.justify),
+                    "\n\n    Таны оруулж буй хувь нэмэрт бид гүнээ талархаж байна!\n",
+                    textAlign: TextAlign.justify),
               ),
             ],
-
           ),
-        )
-    );
+        ));
   }
 }

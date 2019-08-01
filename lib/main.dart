@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lkc/guidelines.dart';
-import 'package:lkc/login.dart';
-import 'package:lkc/project.dart';
+import 'package:lkc/routes.dart';
 
 void main() => runApp(MyApp());
 
@@ -14,7 +12,8 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.indigo,
       ),
-      home: MyHomePage(title: 'Нутгийн Мэдлэгийн Цөм'),
+      initialRoute: '/',
+      routes: routes,
     );
   }
 }
@@ -56,17 +55,17 @@ class _MyHomePageState extends State<MyHomePage> {
             padding: EdgeInsets.all(5.0),
             child: new Card(
                 child: new Row(
-                  children: <Widget>[
-                    Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: new Text(
-                        'тавтай морил!'.toUpperCase(),
-                        style:
+              children: <Widget>[
+                Padding(
+                  padding: EdgeInsets.all(20.0),
+                  child: new Text(
+                    'тавтай морил!'.toUpperCase(),
+                    style:
                         TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                )),
+                  ),
+                ),
+              ],
+            )),
           ),
           Padding(
             padding: EdgeInsets.only(left: 5.0, top: 70.0, right: 5.0),
@@ -101,10 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       this._currentStep = this._currentStep + 1;
                     } else {
                       //Logic to check if everything is complicated
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => LoginApp()),
-                      );
+                      Navigator.pushNamed(context, "/");
                       print('Task, check fields.');
                     }
                   });
@@ -153,10 +149,7 @@ class _MyHomePageState extends State<MyHomePage> {
         content: InkWell(
           child: Text("Энд дарж манай төсөлтэй танилцана уу."),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProjectApp()),
-            );
+            Navigator.pushNamed(context, '/project');
           },
         ),
         isActive: _currentStep >= 1,
@@ -167,10 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Text(
               'Энд дарж ойлголтыг нутагшуулах зааварчилгаатай танилцана уу.'),
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => GuidelineApp()),
-            );
+            Navigator.pushNamed(context, '/guidelines');
           },
         ),
         isActive: _currentStep >= 2,
@@ -182,6 +172,9 @@ class _MyHomePageState extends State<MyHomePage> {
             color: Colors.white30,
           ),
           child: new InkWell(
+            onTap: () {
+              Navigator.pushNamed(context, '/');
+            },
             child: Text(
                 'Та өмнөх шаардлагуудыг хангасан бол "Оролцох" товчийг дарна уу.'),
           ),

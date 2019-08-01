@@ -1,38 +1,15 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lkc/networklayer.dart';
-import 'package:lkc/task.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'chooselanguage.dart';
 
-
-void main() => runApp(PreviousApp());
-
-class PreviousApp extends StatelessWidget {
-  // This widget is the root of your application.
+class PreviousApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Өмнөх орчуулга'),
-    );
-  }
+  _PreviousAppState createState() => _PreviousAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _PreviousAppState extends State<PreviousApp> {
   List prevWords = [];
   List translateWord = [];
   List language = [];
@@ -55,7 +32,8 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  String _text =
+      'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   @override
@@ -64,7 +42,6 @@ class _MyHomePageState extends State<MyHomePage> {
     _showPrev();
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
-
   }
 
   _showPrev() async {
@@ -77,8 +54,11 @@ class _MyHomePageState extends State<MyHomePage> {
     taskId = "5c99ce76b013d855237c97bd";
 
     var token = prefs.getString('token');
-    var url = "http://lkc.num.edu.mn/translation/prev?domain=" + domainId.toString() + "&task=" + taskId.toString();
-    http.get(url,  headers: {
+    var url = "http://lkc.num.edu.mn/translation/prev?domain=" +
+        domainId.toString() +
+        "&task=" +
+        taskId.toString();
+    http.get(url, headers: {
       'Content-Type': 'application/json',
       'Accept': 'application/json, text/plain, */*',
       'Authorization': token,
@@ -90,29 +70,29 @@ class _MyHomePageState extends State<MyHomePage> {
         _processPrevWords(response);
       });
     });
-
   }
 
-  void _processPrevWords(res) async{
+  void _processPrevWords(res) async {
     try {
-        prevWords = res['data']['synset'];
-        translateWord = res['data']['translation'];
-        data = res['data'];
-        var t = res['data']['synset'] as List;
-        var codes = t.map((x) {
-          return x['languageCode'];
-        }).toList();
-        language = codes;
-        for (var i in prevWords) {
-          if (i['languageCode'] == _value) {
-            lemma = i['lemma'];
-            gloss = i['gloss'];
-          }
+      prevWords = res['data']['synset'];
+      translateWord = res['data']['translation'];
+      data = res['data'];
+      var t = res['data']['synset'] as List;
+      var codes = t.map((x) {
+        return x['languageCode'];
+      }).toList();
+      language = codes;
+      for (var i in prevWords) {
+        if (i['languageCode'] == _value) {
+          lemma = i['lemma'];
+          gloss = i['gloss'];
         }
+      }
     } catch (e) {
       print(e);
     }
   }
+
   void _onChanged(String value) {
     for (var item in prevWords) {
       if (item['languageCode'] == value) {
@@ -126,26 +106,26 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     print("prevWords->");
     print(prevWords.length);
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.title),
 //          bottom: ,
+          title: Text(
+            "Өмнөх үг",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TaskApp()),
-            ),
-          )),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pushNamed(context, '/task'))),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
@@ -175,7 +155,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       value: value['code'],
                       child: new Row(
                         children: <Widget>[
-                          _langIcon(value['code'].toString()),
+                          LangIcon(value['code'].toString()),
                           new Text('  ${value['label']}'),
                         ],
                       ),
@@ -192,14 +172,19 @@ class _MyHomePageState extends State<MyHomePage> {
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Text(lemma.toLowerCase(), style: TextStyle(
-                    fontSize: 15.0,
-                    fontWeight: FontWeight.bold,),
+                  Text(
+                    lemma.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 15.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text(gloss.toLowerCase(), style: TextStyle(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  Text(
+                    gloss.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -226,31 +211,40 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 Padding(
                   padding: EdgeInsets.only(left: 10.0),
-                  child: new  FlatButton(
-                    onPressed: () => {
-
-                    },
+                  child: new FlatButton(
+                    onPressed: () => {},
                     padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
+                    child: Row(
+                      // Replace with a Row for horizontal icon + text
                       children: <Widget>[
-                        Icon(Icons.arrow_back, color: Colors.indigo,),
-                        Text(" Өмнөх", style: TextStyle(color: Colors.indigo),),
+                        Icon(
+                          Icons.arrow_back,
+                          color: Colors.indigo,
+                        ),
+                        Text(
+                          " Өмнөх",
+                          style: TextStyle(color: Colors.indigo),
+                        ),
                       ],
                     ),
                   ),
                 ),
-
                 Padding(
                   padding: EdgeInsets.only(left: 150.0, right: 5.0),
                   child: new FlatButton(
-                    onPressed: () => {
-
-                    },
+                    onPressed: () => {},
                     padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
+                    child: Row(
+                      // Replace with a Row for horizontal icon + text
                       children: <Widget>[
-                        Text(" Дараах", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.arrow_forward, color: Colors.indigo,)
+                        Text(
+                          " Дараах",
+                          style: TextStyle(color: Colors.indigo),
+                        ),
+                        Icon(
+                          Icons.arrow_forward,
+                          color: Colors.indigo,
+                        )
                       ],
                     ),
                   ),
@@ -263,54 +257,15 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  void something(int e){
-    setState((){
-      if(e == 0){
+  void something(int e) {
+    setState(() {
+      if (e == 0) {
         radioValue = 0;
-      } else if (e == 1){
+      } else if (e == 1) {
         radioValue = 1;
-      } else if (e == 2){
+      } else if (e == 2) {
         radioValue = 2;
       }
     });
-  }
-  _langIcon(String value) {
-    if (value == 'eng') {
-      return new Image(
-        image: new AssetImage('images/united-kingdom.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'zho') {
-      return new Image(
-        image: new AssetImage('images/china.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'deu') {
-      return new Image(
-        image: new AssetImage('images/germany.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'fra') {
-      return new Image(
-        image: new AssetImage('images/france.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'rus') {
-      return new Image(
-        image: new AssetImage('images/russia.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'jpn') {
-      return new Image(
-        image: new AssetImage('images/japan.png'),
-        width: 25,
-        height: 25,
-      );
-    }
   }
 }

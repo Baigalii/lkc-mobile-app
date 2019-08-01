@@ -1,41 +1,19 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
-import 'package:lkc/performance.dart';
 import 'package:http/http.dart' as http;
-import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'chooselanguage.dart';
 
 //Орчуулах
-
-void main() => runApp(TranslateApp());
-
-class TranslateApp extends StatelessWidget {
-  // This widget is the root of your application.
+class TranslateApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Нүүр хэсэг',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Орчуулах'),
-    );
-  }
+  _TranslateAppState createState() => _TranslateAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _TranslateAppState extends State<TranslateApp> {
   double rating = 3.5;
 
   List translationWords = [];
@@ -58,7 +36,8 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  String _text =
+      'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
@@ -75,14 +54,14 @@ class _MyHomePageState extends State<MyHomePage> {
     domainId = prefs.getInt("gid");
     taskNumber = prefs.getInt("taskNum");
     taskId = prefs.getString("taskID");
-    fetchAllocation(taskNumber,domainId).then((res) {
+    fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         _processTranslation(res);
       });
     });
   }
 
-  _processTranslation(res) async{
+  _processTranslation(res) async {
     try {
       if (res['statusCode'] == 0) {
         gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
@@ -108,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
       print(e);
     }
   }
+
   void _onChanged(String value) {
     for (var item in translationWords) {
       if (item['languageCode'] == value) {
@@ -120,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void dispose(){
+  void dispose() {
     super.dispose();
   }
 
@@ -132,21 +112,22 @@ class _MyHomePageState extends State<MyHomePage> {
     DateTime now;
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(
+            "Орчуулах",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              _taskType(4);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TaskApp()),
-              );
-            }
-          )),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                _taskType(4);
+                Navigator.pushNamed(context, '/task');
+              })),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
@@ -172,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: new Row(
                       children: <Widget>[
 //                        new Icon(Icons.language),
-                        _langIcon(value['code'].toString()),
+                        LangIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
@@ -208,17 +189,11 @@ class _MyHomePageState extends State<MyHomePage> {
             Column(
               mainAxisAlignment: MainAxisAlignment.start,
               children: <Widget>[
-//                Padding(
-//                  padding: EdgeInsets.all(20.0),
-//                  child:  new Icon(
-//                      Icons.exit_to_app
-//                  ),
-//                ),
                 Padding(
                   padding: EdgeInsets.all(20.0),
                   child: TextField(
                     keyboardType: TextInputType.multiline,
-                      maxLines: 2,
+                    maxLines: 2,
                     decoration: InputDecoration(
                         border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(5.0),
@@ -264,122 +239,112 @@ class _MyHomePageState extends State<MyHomePage> {
             Divider(
               height: 25.0,
             ),
-            Row(
-              children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(left: 10.0),
-                  child: new FlatButton(
-                    onPressed: _skipButton,
-                    padding: EdgeInsets.all(10.0),
-                    child: Row(
-                      // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
+            Padding(
+              padding: EdgeInsets.all(10.0),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 20.0),
+                      child: new FlatButton(
+                        onPressed: _skipButton,
+                        child: Text(
                           "Алгасах",
                           style: TextStyle(color: Colors.indigo),
                         ),
-                        Icon(
-                          Icons.skip_next,
-                          color: Colors.indigo,
-                        )
-                      ],
+                      ),
                     ),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(left: 100.0),
-                  child: new FlatButton(
-                    onPressed: (){
+                  Expanded(
+                      child: Padding(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    child: new FlatButton(
+                      onPressed: () {
                         if (controller.text == " ") {
-                        Fluttertoast.showToast(msg: "Илгээх өгөгдөл байхгүй байна!");
+                          Fluttertoast.showToast(
+                              msg: "Илгээх өгөгдөл байхгүй байна!");
                         } else {
                           _sendButton();
                         }
-                    },
-                    padding: EdgeInsets.all(10.0),
-                    child: Row(
-                      // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
-                          "Илгээх",
-                          style: TextStyle(color: Colors.indigo),
-                        ),
-                        Icon(
-                          Icons.send,
-                          color: Colors.indigo,
-                        )
-                      ],
+                      },
+                      child: Text(
+                        "Илгээх",
+                        style: TextStyle(color: Colors.indigo),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
+                  )),
+                ],
+              ),
+            )
           ],
         ),
       ),
     );
   }
 
-  _taskType(int t) async{
+  _taskType(int t) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt("taskNum", t );
+    prefs.setInt("taskNum", t);
   }
 
   void _sendButton() async {
-      DateTime now = DateTime.now();
-      endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
-      //2019-04-30T07:24:53.887Z
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    //2019-04-30T07:24:53.887Z
 
-      Map obj = {
-        'taskId': "${taskId}",
-        'domainId': "${domainId}",
-        'start_date': "${startDate}",
-        'end_date': "${endDate}",
-        'translation': "${controllerTranslate.text}",
-        'translationType': "GlossTranslation",
-      };
-      var body = jsonEncode(obj);
-      var prefs = await SharedPreferences.getInstance();
-      var token = prefs.getString('token');
-      var url = "http://lkc.num.edu.mn/translation";
-      var client = new http.Client();
-      client.post(url, body: body, headers: {
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'translation': "${controllerTranslate.text}",
+      'translationType': "GlossTranslation",
+    };
+    var body = jsonEncode(obj);
+    var prefs = await SharedPreferences.getInstance();
+    var token = prefs.getString('token');
+    var url = "http://lkc.num.edu.mn/translation";
+    var client = new http.Client();
+    client.post(url, body: body, headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/plain, */*',
+      'Authorization': token,
+    }).then((response) async {
+      print("Response status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+      Fluttertoast.showToast(msg: "Амжилттай илгээлээ!");
+      client
+          .get('http://lkc.num.edu.mn/task/4/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
-      }).then((response) async {
-        print("Response status: ${response.statusCode}");
-        print("Response body: ${response.body}");
-        Fluttertoast.showToast(msg: "Амжилттай илгээлээ!");
-        client.get('http://lkc.num.edu.mn/task/4/' + domainId.toString(), headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json, text/plain, */*',
-          'Authorization': token,
-        }).then((result) {
-          print(result.body);
+      }).then((result) {
+        print(result.body);
 //        print(jsonDecode(result.body)['task']['synset'][0]['lemma']);
-          var taskResult = jsonDecode(result.body);
-          if (taskResult['statusCode'] != 0) {
-            prefs.setString("taskID", taskResult['task']['_id'].toString());
-            _showTranslation();
-            controllerTranslate.text = " ";
-          } else {
-            _scaffoldKey.currentState.showSnackBar(SnackBar(
-              content: Text(_text),
-              duration: Duration(seconds: 5),
-            ));
-          }
-        });
+        var taskResult = jsonDecode(result.body);
+        if (taskResult['statusCode'] != 0) {
+          prefs.setString("taskID", taskResult['task']['_id'].toString());
+          _showTranslation();
+          controllerTranslate.text = " ";
+        } else {
+          _scaffoldKey.currentState.showSnackBar(SnackBar(
+            content: Text(_text),
+            duration: Duration(seconds: 5),
+          ));
+        }
       });
+    });
+  }
 
-    }
-
-  _skipButton() async{
+  _skipButton() async {
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
+    var _body =
+        '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
         ' "end_date": "${endDate}", "skip": true , "translationType:" "GlossTranslation"}';
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
@@ -406,7 +371,6 @@ class _MyHomePageState extends State<MyHomePage> {
       if (taskResult['statusCode'] != 0) {
         prefs.setString("taskID", taskResult['task']['_id'].toString());
         _showTranslation();
-
       } else {
         _scaffoldKey.currentState.showSnackBar(SnackBar(
           content: Text(_text),
@@ -414,49 +378,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ));
       }
     });
-  }
-
-
-}
-
-
-_langIcon(String value) {
-  if (value == 'eng') {
-    return new Image(
-      image: new AssetImage('images/united-kingdom.png'),
-      width: 25,
-      height: 25,
-    );
-  } else if (value == 'zho') {
-    return new Image(
-      image: new AssetImage('images/china.png'),
-      width: 25,
-      height: 25,
-    );
-  } else if (value == 'deu') {
-    return new Image(
-      image: new AssetImage('images/germany.png'),
-      width: 25,
-      height: 25,
-    );
-  } else if (value == 'fra') {
-    return new Image(
-      image: new AssetImage('images/france.png'),
-      width: 25,
-      height: 25,
-    );
-  } else if (value == 'rus') {
-    return new Image(
-      image: new AssetImage('images/russia.png'),
-      width: 25,
-      height: 25,
-    );
-  } else if (value == 'jpn') {
-    return new Image(
-      image: new AssetImage('images/japan.png'),
-      width: 25,
-      height: 25,
-    );
   }
 }
 

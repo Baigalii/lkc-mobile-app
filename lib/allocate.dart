@@ -1,47 +1,22 @@
 import 'dart:convert';
-//import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lkc/performance.dart';
-import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lkc/networklayer.dart';
 import 'package:smooth_star_rating/smooth_star_rating.dart';
-import 'package:lkc/previous.dart';
-import 'package:giffy_dialog/giffy_dialog.dart';
 import 'package:http/http.dart' as http;
-import 'package:smooth_star_rating/smooth_star_rating.dart';
 import 'package:flutter/rendering.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-
+import 'chooselanguage.dart';
 
 //Үг оноох
-
-void main() => runApp(AllocateApp());
-
-class AllocateApp extends StatelessWidget {
-  // This widget is the root of your application.
+class AllocateApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Нүүр хэсэг',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Үг оноох'),
-    );
-  }
+  _AllocateAppState createState() => _AllocateAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
+class _AllocateAppState extends State<AllocateApp>
+    with TickerProviderStateMixin {
   List<String> _words = [];
   List<TextEditingController> _controllers = [];
   List<SmoothStarRating> _star = [];
@@ -67,7 +42,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  String _text =
+      'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   VoidCallback _showPersBottomSheetCallBack;
 
@@ -79,9 +55,9 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     DateTime now = DateTime.now();
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     _setTasks();
-
   }
-  _setTasks() async{
+
+  _setTasks() async {
     setState(() {
       _star.add(SmoothStarRating());
       _words.add('');
@@ -89,19 +65,20 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ratings.add(0);
     });
   }
+
   _showTranslation() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     taskNumber = prefs.getInt("taskNum");
     domainId = prefs.getInt("gid");
     taskId = prefs.getString("taskID");
-    fetchAllocation(taskNumber,domainId).then((res) {
+    fetchAllocation(taskNumber, domainId).then((res) {
       setState(() {
         _processAllocations(res);
       });
     });
   }
 
-  void _processAllocations(res) async{
+  void _processAllocations(res) async {
 //    _star.add(SmoothStarRating());
 //    _controllers.add(new TextEditingController());
 //    _words.add('');
@@ -129,7 +106,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
     }
   }
 
-
   void _onChanged(String value) {
     for (var item in provideWords) {
       if (item['languageCode'] == value) {
@@ -151,17 +127,18 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       key: _scaffoldKey,
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
-        title: Text(widget.title),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back),
-          onPressed: (){
-            _taskType(1);
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => TaskApp()),
-            );
-          }
+        title: Text(
+          "Үг оноох",
+          style: TextStyle(color: Colors.white, fontSize: 20.0),
+          textAlign: TextAlign.center,
         ),
+        centerTitle: true,
+        leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              _taskType(1);
+              Navigator.pushNamed(context, '/task');
+            }),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.live_help),
@@ -174,7 +151,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         scrollDirection: Axis.vertical,
         child: new Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
@@ -204,7 +181,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       value: value['code'],
                       child: new Row(
                         children: <Widget>[
-                          _langIcon(value['code'].toString()),
+                          LangIcon(value['code'].toString()),
                           new Text('  ${value['label']}'),
                         ],
                       ),
@@ -217,9 +194,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(20.0),
+              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
                   Text(
                     lemma.toLowerCase(),
@@ -238,9 +216,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ],
               ),
             ),
-//            Divider(
-//              height: 10.0,
-//            ),
             Column(
               children: _buildWords(context),
             ),
@@ -252,24 +227,15 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               children: <Widget>[
                 Expanded(
                   child: FlatButton(
-                    onPressed: () => {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => PreviousApp()),
-                          ),
-                        },
-                    padding: EdgeInsets.all(10.0),
+                    color: Colors.indigo,
+                    onPressed: () => Navigator.pushNamed(context, '/previous'),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       // Replace with a Row for horizontal icon + text
                       children: <Widget>[
-                        Icon(
-                          Icons.skip_previous,
-                          color: Colors.indigo,
-                        ),
                         Text(
                           "Өмнөх",
-                          style: TextStyle(color: Colors.indigo),
+                          style: TextStyle(color: Colors.white),
                         ),
                       ],
                     ),
@@ -277,20 +243,17 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 ),
                 Expanded(
                   child: FlatButton(
-                    padding: EdgeInsets.only(left: 80.0),
+                    color: Colors.indigo,
                     onPressed: _skipButton,
                     //padding: EdgeInsets.all(10.0),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       // Replace with a Row for horizontal icon + text
                       children: <Widget>[
                         Text(
                           "Алгасах",
-                          style: TextStyle(color: Colors.indigo),
+                          style: TextStyle(color: Colors.white),
                         ),
-                        Icon(
-                          Icons.skip_next,
-                          color: Colors.indigo,
-                        )
                       ],
                     ),
                   ),
@@ -298,44 +261,40 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
               ],
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
-                Expanded(
+                Flexible(
                   child: Center(
                     child: FlatButton(
+                      color: Colors.indigo,
                       onPressed: () => _showDialog(context),
                       splashColor: Colors.indigo,
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         // Replace with a Row for horizontal icon + text
                         children: <Widget>[
-                          Icon(
-                            Icons.event_busy,
-                            color: Colors.indigo,
-                          ),
                           Text(
                             "GAP",
-                            style: TextStyle(color: Colors.indigo),
+                            style: TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
                     ),
                   ),
                 ),
-                Expanded(
+                Flexible(
                   child: Center(
                     child: FlatButton(
-                      padding: EdgeInsets.only(left: 80.0),
+                      color: Colors.indigo,
                       onPressed: _sendButton,
                       child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         // Replace with a Row for horizontal icon + text
                         children: <Widget>[
                           Text(
                             "Илгээх",
-                            style: TextStyle(color: Colors.indigo),
+                            style: TextStyle(color: Colors.white),
                           ),
-                          Icon(
-                            Icons.send,
-                            color: Colors.indigo,
-                          )
                         ],
                       ),
                     ),
@@ -348,9 +307,10 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       ),
     );
   }
-  _taskType(int t) async{
+
+  _taskType(int t) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt("taskNum", t );
+    prefs.setInt("taskNum", t);
   }
 
   _showDialog(BuildContext context) async {
@@ -371,12 +331,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             actions: <Widget>[
               new FlatButton(
                 child: new Text('OK'),
-                onPressed: () async{
+                onPressed: () async {
                   var translationGap = [];
-                    translationGap.add({
-                      'lemma': "GAP",
-                      'rating': 5,
-                    });
+                  translationGap.add({
+                    'lemma': "GAP",
+                    'rating': 5,
+                  });
 
                   DateTime now = DateTime.now();
                   endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
@@ -415,46 +375,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         });
   }
 
-  _langIcon(String value) {
-    if (value == 'eng') {
-      return new Image(
-        image: new AssetImage('images/united-kingdom.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'zho') {
-      return new Image(
-        image: new AssetImage('images/china.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'deu') {
-      return new Image(
-        image: new AssetImage('images/germany.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'fra') {
-      return new Image(
-        image: new AssetImage('images/france.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'rus') {
-      return new Image(
-        image: new AssetImage('images/russia.png'),
-        width: 25,
-        height: 25,
-      );
-    } else if (value == 'jpn') {
-      return new Image(
-        image: new AssetImage('images/japan.png'),
-        width: 25,
-        height: 25,
-      );
-    }
-  }
-
   _buildWords(BuildContext context) {
     var children = <Widget>[];
     for (var i = 0; i < _words.length; i++) {
@@ -472,7 +392,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                       hintStyle: TextStyle(color: Colors.grey),
                       suffix: IconButton(
                         icon: Icon(Icons.cancel),
-                        onPressed: (){
+                        onPressed: () {
                           setState(() {
                             _controllers[i].text = "";
                           });
@@ -491,12 +411,12 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                   iconSize: 35.0,
                   icon: Icon(Icons.add_circle_outline),
                   onPressed: () {
-                    if(_controllers[i].text == "") {
+                    if (_controllers[i].text == "") {
                       Fluttertoast.showToast(msg: "Үгээ оруулна уу!");
-                    }
-                    else if(_controllers[i].text != "" && ratings[i]<=0){
-                      Fluttertoast.showToast(msg: "Өөрийн үнэлгээгээ дарна уу!");
-                    }else {
+                    } else if (_controllers[i].text != "" && ratings[i] <= 0) {
+                      Fluttertoast.showToast(
+                          msg: "Өөрийн үнэлгээгээ дарна уу!");
+                    } else {
                       setState(() {
                         print(i);
                         _words.add('');
@@ -530,7 +450,7 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
                 color: Colors.red,
                 icon: Icon(Icons.remove_circle),
                 onPressed: () {
-                  if(_controllers.length==1){
+                  if (_controllers.length == 1) {
                     Fluttertoast.showToast(msg: "Bolohgui ee");
                   } else {
                     setState(() {
@@ -582,7 +502,8 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
 
-      client.get('http://lkc.num.edu.mn/task/1/' + domainId.toString(), headers: {
+      client
+          .get('http://lkc.num.edu.mn/task/1/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
@@ -593,11 +514,11 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         if (taskResult['statusCode'] != 0) {
           prefs.setString("taskID", taskResult['task']['_id'].toString());
           _showTranslation();
-         _controllers.clear();
-         _star.clear();
-         _words.clear();
-         ratings.clear();
-         _setTasks();
+          _controllers.clear();
+          _star.clear();
+          _words.clear();
+          ratings.clear();
+          _setTasks();
         } else {
           _scaffoldKey.currentState.showSnackBar(SnackBar(
             content: Text(_text),
@@ -606,7 +527,6 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
         }
       });
     });
-
   }
 
   _skipButton() async {
@@ -638,48 +558,71 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
 
     _scaffoldKey.currentState
         .showBottomSheet((context) {
-      return new ListView(
-
+          return new ListView(
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.all(10.0),
-                child: new Text('Ажлын заавар', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+                child: new Text(
+                  'Ажлын заавар',
+                  style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 10.0),
-                child: new Text('Гүйцэтгэх ажил: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+                child: new Text(
+                  'Гүйцэтгэх ажил: ',
+                  style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.left,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                child: new Text("* Нутагшуулах ойлголтын англи хэлээр илэрхийлсэн утгыг сайтар ойлгох " + "\n\n"
-                    "* Тухайн ойлголтын утгыг зөв илэрхийлж чадах монгол хэлний ойролцоо утгатай үг(с)ийг оноож бичих" + "\n\n"
-                    "* Оноосон үг бүрд хэр итгэлтэй байгаа өөрийн үнэлгээг өгөх" + "\n\n"
-                    "* Хэрэв ойлголтыг илэрхийлж чадах үг байхгүй гэж үзэж байгаа бол GAP товчийг дарж шалтгааныг бичих", textAlign: TextAlign.left),
+                child: new Text(
+                    "* Нутагшуулах ойлголтын англи хэлээр илэрхийлсэн утгыг сайтар ойлгох " +
+                        "\n\n"
+                            "* Тухайн ойлголтын утгыг зөв илэрхийлж чадах монгол хэлний ойролцоо утгатай үг(с)ийг оноож бичих" +
+                        "\n\n"
+                            "* Оноосон үг бүрд хэр итгэлтэй байгаа өөрийн үнэлгээг өгөх" +
+                        "\n\n"
+                            "* Хэрэв ойлголтыг илэрхийлж чадах үг байхгүй гэж үзэж байгаа бол GAP товчийг дарж шалтгааныг бичих",
+                    textAlign: TextAlign.left),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 10.0),
-                child: new Text('Санамж: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+                child: new Text(
+                  'Санамж: ',
+                  style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.left,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                child: new Text("* Оноох үг нь үгийн сангийн нэгж (толгой үг, хэлц үг, чөлөөт бус холбоо үг) байх" + "\n\n"
-                    "* Нутагшуулах ойлголтын үгийн аймагт тохирсон үг (n.-нэр, v.-үйл, a.-тэмдэг нэр, d.-дайвар үг) бичих" + "\n\n"
-                    "* Зөвхөн кирилл үсгээр зөв бичих дүрмийн алдаагүй бичих" + "\n\n"
-                    "* Тайлбарлаж эсвэл шууд орчуулж бичихгүй байх" + "\n\n"
-                    "* Англиас бусад хэлээр ойлголтыг зөв илэрхийлээгүй байж болзошгүй тул англи хэлийг эх болгох", textAlign: TextAlign.left),
+                child: new Text(
+                    "* Оноох үг нь үгийн сангийн нэгж (толгой үг, хэлц үг, чөлөөт бус холбоо үг) байх" +
+                        "\n\n"
+                            "* Нутагшуулах ойлголтын үгийн аймагт тохирсон үг (n.-нэр, v.-үйл, a.-тэмдэг нэр, d.-дайвар үг) бичих" +
+                        "\n\n"
+                            "* Зөвхөн кирилл үсгээр зөв бичих дүрмийн алдаагүй бичих" +
+                        "\n\n"
+                            "* Тайлбарлаж эсвэл шууд орчуулж бичихгүй байх" +
+                        "\n\n"
+                            "* Англиас бусад хэлээр ойлголтыг зөв илэрхийлээгүй байж болзошгүй тул англи хэлийг эх болгох",
+                    textAlign: TextAlign.left),
               ),
             ],
           );
-    })
+        })
         .closed
         .whenComplete(() {
-      if (mounted) {
-        setState(() {
-          _showPersBottomSheetCallBack = _showBottomSheet;
+          if (mounted) {
+            setState(() {
+              _showPersBottomSheetCallBack = _showBottomSheet;
+            });
+          }
         });
-      }
-    });
   }
+
   void _showModalSheet() {
     showModalBottomSheet(
         context: context,
@@ -688,39 +631,56 @@ class _MyHomePageState extends State<MyHomePage> with TickerProviderStateMixin {
             children: <Widget>[
               Padding(
                 padding: EdgeInsets.all(10.0),
-                child: new Text('Ажлын заавар', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+                child: new Text(
+                  'Ажлын заавар',
+                  style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 10.0),
-                child: new Text('Гүйцэтгэх ажил: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+                child: new Text(
+                  'Гүйцэтгэх ажил: ',
+                  style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.left,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                child: new Text("* Нутагшуулах ойлголтын англи хэлээр илэрхийлсэн утгыг сайтар ойлгох " + "\n\n"
-                    "* Тухайн ойлголтын утгыг зөв илэрхийлж чадах монгол хэлний ойролцоо утгатай үг(с)ийг оноож бичих" + "\n\n"
-                    "* Оноосон үг бүрд хэр итгэлтэй байгаа өөрийн үнэлгээг өгөх" + "\n\n"
-                    "* Хэрэв ойлголтыг илэрхийлж чадах үг байхгүй гэж үзэж байгаа бол GAP товчийг дарж шалтгааныг бичих", textAlign: TextAlign.left),
+                child: new Text(
+                    "* Нутагшуулах ойлголтын англи хэлээр илэрхийлсэн утгыг сайтар ойлгох " +
+                        "\n\n"
+                            "* Тухайн ойлголтын утгыг зөв илэрхийлж чадах монгол хэлний ойролцоо утгатай үг(с)ийг оноож бичих" +
+                        "\n\n"
+                            "* Оноосон үг бүрд хэр итгэлтэй байгаа өөрийн үнэлгээг өгөх" +
+                        "\n\n"
+                            "* Хэрэв ойлголтыг илэрхийлж чадах үг байхгүй гэж үзэж байгаа бол GAP товчийг дарж шалтгааныг бичих",
+                    textAlign: TextAlign.left),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 10.0),
-                child: new Text('Санамж: ', style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold), textAlign: TextAlign.left,),
+                child: new Text(
+                  'Санамж: ',
+                  style: TextStyle(fontSize: 15.0, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.left,
+                ),
               ),
               Padding(
                 padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                child: new Text("* Оноох үг нь үгийн сангийн нэгж (толгой үг, хэлц үг, чөлөөт бус холбоо үг) байх" + "\n\n"
-                    "* Нутагшуулах ойлголтын үгийн аймагт тохирсон үг (n.-нэр, v.-үйл, a.-тэмдэг нэр, d.-дайвар үг) бичих" + "\n\n"
-                    "* Зөвхөн кирилл үсгээр зөв бичих дүрмийн алдаагүй бичих" + "\n\n"
-                    "* Тайлбарлаж эсвэл шууд орчуулж бичихгүй байх" + "\n\n"
-                    "* Англиас бусад хэлээр ойлголтыг зөв илэрхийлээгүй байж болзошгүй тул англи хэлийг эх болгох", textAlign: TextAlign.left),
+                child: new Text(
+                    "* Оноох үг нь үгийн сангийн нэгж (толгой үг, хэлц үг, чөлөөт бус холбоо үг) байх" +
+                        "\n\n"
+                            "* Нутагшуулах ойлголтын үгийн аймагт тохирсон үг (n.-нэр, v.-үйл, a.-тэмдэг нэр, d.-дайвар үг) бичих" +
+                        "\n\n"
+                            "* Зөвхөн кирилл үсгээр зөв бичих дүрмийн алдаагүй бичих" +
+                        "\n\n"
+                            "* Тайлбарлаж эсвэл шууд орчуулж бичихгүй байх" +
+                        "\n\n"
+                            "* Англиас бусад хэлээр ойлголтыг зөв илэрхийлээгүй байж болзошгүй тул англи хэлийг эх болгох",
+                    textAlign: TextAlign.left),
               ),
             ],
           );
         });
   }
-
 }
-
-
-
-
-

@@ -1,47 +1,13 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:lkc/guidelines.dart';
-import 'package:lkc/localization/app_translations.dart';
 import 'package:lkc/localization/application.dart';
-import 'package:lkc/localization/application.dart';
-import 'package:lkc/project.dart';
-import 'package:lkc/publications.dart';
-import 'package:lkc/register.dart';
-import 'package:lkc/resetpass.dart';
-import 'package:lkc/performance.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rich_alert/rich_alert.dart';
 
-void main() => runApp(new LoginApp());
-
-class LoginApp extends StatelessWidget {
-  // This widget is the root of your application.
+class LoginApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ), //ThemeData
-      home: MyHomePage(title: 'Нутгийн Мэдлэгийн Цөм'),
-      routes: <String, WidgetBuilder>{
-        '/a': (BuildContext context) => MyHomePage(title: 'Login Page'),
-//        '/b': (BuildContext context) => MyPage(title: 'page B'),
-//        '/c': (BuildContext context) => MyPage(title: 'page C'),
-      },
-    ); //MaterialApp
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _LoginAppState createState() => _LoginAppState();
 }
 
 class ChoiceOfMenu {
@@ -59,7 +25,7 @@ List<ChoiceOfMenu> choices = <ChoiceOfMenu>[
   new ChoiceOfMenu(title: ' Хэл солих', icon: Icons.language),
 ];
 
-class _MyHomePageState extends State<MyHomePage> {
+class _LoginAppState extends State<LoginApp> {
   final formKey = GlobalKey<FormState>();
   bool _validate = false;
   String _email, _password;
@@ -81,41 +47,23 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-//    application.onLocaleChanged = onLocaleChange;
-//    onLocaleChange(Locale(languagesMap["Mongolian"]));
   }
 
-//  void onLocaleChange(Locale locale) async {
-//    setState(() {
-//      AppTranslations.load(locale);
-//    });
-//  }
   void _select(ChoiceOfMenu choice) {
     if (choice.icon == Icons.info) {
       print("Tusuliin huudasruu orloo");
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => ProjectApp()));
-    }
-//    else if (choice.icon == Icons.translate) {
-//      print("Oroltsoh heseg ruu orloo");
-//      Navigator.push(
-//          context, MaterialPageRoute(builder: (context) => PerformanceApp()));
-//    }
-    else if (choice.icon == Icons.public) {
+      Navigator.pushNamed(context, '/project');
+    } else if (choice.icon == Icons.public) {
       print("Niitlel heseg ruu orloo");
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => GuidelineApp()));
+      Navigator.pushNamed(context, '/guidelines');
     } else if (choice.icon == Icons.lock_open) {
       print("Nevtreh heseg ruu orloo");
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => LoginApp()));
+      Navigator.pushNamed(context, '/');
     } else if (choice.icon == Icons.fingerprint) {
       print("burtguuleh heseg ruu orloo");
-      Navigator.push(
-          context, MaterialPageRoute(builder: (context) => RegisterApp()));
+      Navigator.pushNamed(context, '/register');
     } else if (choice.icon == Icons.language) {
       print("hel solih");
-//      _selectLan;
     }
 
     setState(() {
@@ -123,23 +71,17 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-//  void _selectLan(String language) {
-//    onLocaleChange(Locale(languagesMap[language]));
-//    setState(() {
-//      if (language == "Mongolian") {
-//        label = "Монгол";
-//      } else {
-//        label = language;
-//      }
-//    });
-//  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(
+            "Нэвтрэх",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           backgroundColor: Colors.indigo,
           actions: <Widget>[
             new InkWell(
@@ -204,10 +146,11 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           TextFormField(
                             decoration: InputDecoration(
-                                labelText: 'Хэрэглэгчийн нэр* ',
-                                prefixIcon: Icon(Icons.person_outline),
-                                errorText: _validate ? 'Value Can\'t Be Empty' : null,),
-
+                              labelText: 'Хэрэглэгчийн нэр* ',
+                              prefixIcon: Icon(Icons.person_outline),
+                              errorText:
+                                  _validate ? 'Value Can\'t Be Empty' : null,
+                            ),
                             autocorrect: false,
                             keyboardType: TextInputType.text,
                             controller: _controllerUsername,
@@ -215,8 +158,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 !input.contains('@') && input.isEmpty
                                     ? 'Хэрэглэгчийн нэрээ оруулна уу'
                                     : null,
-                            onSaved: (_controllerUsername) => _email = _controllerUsername,
-
+                            onSaved: (_controllerUsername) =>
+                                _email = _controllerUsername,
                           ),
                           TextFormField(
                             decoration: InputDecoration(
@@ -224,35 +167,31 @@ class _MyHomePageState extends State<MyHomePage> {
                                 prefixIcon: Icon(Icons.lock_outline)),
                             controller: _controllerPassword,
                             validator: (input) =>
-                            input.length < 8 && input.isEmpty
+                                input.length < 8 && input.isEmpty
                                     ? 'Нууц үгээ оруулна уу'
                                     : null,
                             onSaved: (input) => _password = input,
                             obscureText: true,
-
                           ),
                           Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: <Widget>[
                                 new InkWell(
                                   child: Padding(
-                                    child: new Text('нууц үгээ мартсан уу ?'),
+                                    child: new Text('Нууц үгээ мартсан уу?'),
                                     padding: EdgeInsets.only(top: 10.0),
                                   ),
                                   onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => ResetApp()),
-                                    );
+                                    Navigator.pushNamed(context, '/resetpass');
                                   },
                                 ),
                               ]),
-                          Column(
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10.0),
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 20.0, horizontal: 10.0),
                                 child: RaisedButton(
                                   padding: EdgeInsets.symmetric(vertical: 10.0),
                                   shape: RoundedRectangleBorder(
@@ -273,7 +212,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                 ),
                               ),
                               Padding(
-                                padding: EdgeInsets.symmetric(vertical: 10.0),
+                                padding: EdgeInsets.symmetric(
+                                    vertical: 20.0, horizontal: 10.0),
                                 child: RaisedButton(
                                   padding: EdgeInsets.symmetric(vertical: 10.0),
                                   shape: RoundedRectangleBorder(
@@ -284,11 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                   //onPressed: _submit,
                                   child: Text('Бүртгүүлэх'),
                                   onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) => RegisterApp()),
-                                    );
+                                    Navigator.pushNamed(context, '/register');
                                   },
                                 ),
                               ),
@@ -316,10 +252,7 @@ class _MyHomePageState extends State<MyHomePage> {
         SharedPreferences prefs = await SharedPreferences.getInstance();
         prefs.setString('token', respObj['token']);
         //navigate to next
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => PerformanceApp()),
-        );
+        Navigator.pushNamed(context, '/performance');
       } else {
         showDialog(
             context: context,

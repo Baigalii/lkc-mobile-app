@@ -1,41 +1,18 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
-import 'package:lkc/performance.dart';
-import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-
+import 'chooselanguage.dart';
 
 //Найруулах
-
-void main() => runApp(ModifyApp());
-
-class ModifyApp extends StatelessWidget {
-  // This widget is the root of your application.
+class ModifyApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Нүүр хэсэг',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Найруулах'),
-    );
-  }
+  _ModifyAppState createState() => _ModifyAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _ModifyAppState extends State<ModifyApp> {
   var controller = new TextEditingController();
   double rating = 3.5;
   List reviseWords = [];
@@ -45,8 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
   int domainId;
   int taskNumber;
   String startDate, endDate;
-  String gloss = '',
-      lemma = '';
+  String gloss = '', lemma = '';
   String _value = 'eng';
   List<Map> _values = [
     {'code': 'eng', 'label': 'English'},
@@ -57,7 +33,8 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  String _text =
+      'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
@@ -88,7 +65,6 @@ class _MyHomePageState extends State<MyHomePage> {
             'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
       } else {
         reviseWords = res['task']['synset'];
-//            if(res['translatedGlosses']==0)
         translatedGlosses = res['task']['translatedGlosses'];
         var t = res['task']['synset'] as List;
         var codes = t.map((x) {
@@ -125,21 +101,22 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(
+            "Найруулах",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              _taskType(5);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TaskApp()),
-              );
-            }
-          )),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                _taskType(5);
+                Navigator.pushNamed(context, '/task');
+              })),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
@@ -165,7 +142,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     child: new Row(
                       children: <Widget>[
 //                        new Icon(Icons.language),
-                        _langIcon(value['code'].toString()),
+                        LangIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
@@ -181,14 +158,20 @@ class _MyHomePageState extends State<MyHomePage> {
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Text(lemma.toLowerCase(), style: TextStyle(
-                    fontSize: 17.0,
-                    fontWeight: FontWeight.bold,),
+                  Text(
+                    lemma.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text(gloss.toLowerCase(), style: TextStyle(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.bold,
-                  ),),
+                  Text(
+                    gloss.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -200,7 +183,7 @@ class _MyHomePageState extends State<MyHomePage> {
               children: <Widget>[
                 new Expanded(
                   child: Padding(
-                    padding: EdgeInsets.all(10.0),
+                    padding: EdgeInsets.all(20.0),
                     child: new TextField(
                       keyboardType: TextInputType.multiline,
                       maxLines: 3,
@@ -237,26 +220,22 @@ class _MyHomePageState extends State<MyHomePage> {
                 Expanded(
                   child: new FlatButton(
                     onPressed: _skipButton,
-                    padding: EdgeInsets.only(left: 10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
-                          " Алгасах", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.skip_next, color: Colors.indigo,)
-                      ],
+                    padding:
+                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    child: Text(
+                      " Алгасах",
+                      style: TextStyle(color: Colors.indigo),
                     ),
                   ),
                 ),
                 Expanded(
                   child: new FlatButton(
                     onPressed: _sendButton,
-                    padding: EdgeInsets.only(left: 10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
-                          " Илгээх ", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.send, color: Colors.indigo,)
-                      ],
+                    padding:
+                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    child: Text(
+                      " Илгээх ",
+                      style: TextStyle(color: Colors.indigo),
                     ),
                   ),
                 ),
@@ -268,9 +247,9 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  _taskType(int t) async{
+  _taskType(int t) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt("taskNum", t );
+    prefs.setInt("taskNum", t);
   }
 
   _translatedGlosses(BuildContext context) {
@@ -318,10 +297,13 @@ class _MyHomePageState extends State<MyHomePage> {
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/translation";
-    http.post(url,
-        headers: {'Content-Type': 'application/json', 'Authorization': token},
-        body: body
-    )
+    http
+        .post(url,
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': token
+            },
+            body: body)
         .then((response) async {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
@@ -333,7 +315,8 @@ class _MyHomePageState extends State<MyHomePage> {
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true , "modificationType": "GlossModification"}';
+    var _body =
+        '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}", "end_date": "${endDate}", "skip": true , "modificationType": "GlossModification"}';
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
     var url = "http://lkc.num.edu.mn/modification";
@@ -367,26 +350,4 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
   }
-}
-  _langIcon(String value) {
-    if (value == 'eng') {
-      return new Image(image: new AssetImage('images/united-kingdom.png'),
-        width: 25,
-        height: 25,);
-    } else if (value == 'zho') {
-      return new Image(
-        image: new AssetImage('images/china.png'), width: 25, height: 25,);
-    } else if (value == 'deu') {
-      return new Image(
-        image: new AssetImage('images/germany.png'), width: 25, height: 25,);
-    } else if (value == 'fra') {
-      return new Image(
-        image: new AssetImage('images/france.png'), width: 25, height: 25,);
-    } else if (value == 'rus') {
-      return new Image(
-        image: new AssetImage('images/russia.png'), width: 25, height: 25,);
-    } else if (value == 'jpn') {
-      return new Image(
-        image: new AssetImage('images/japan.png'), width: 25, height: 25,);
-    }
 }

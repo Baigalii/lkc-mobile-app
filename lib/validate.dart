@@ -1,41 +1,19 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
-import 'package:lkc/performance.dart';
 import 'package:http/http.dart' as http;
-import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'chooselanguage.dart';
 
 //Үнэлэх
-
-void main() => runApp(ValidateApp());
-
-class ValidateApp extends StatelessWidget {
-  // This widget is the root of your application.
+class ValidateApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: '',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Үнэлэх'),
-    );
-  }
+  _ValidateAppState createState() => _ValidateAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _ValidateAppState extends State<ValidateApp> {
   int radioValue;
   List language = [];
 
@@ -43,7 +21,7 @@ class _MyHomePageState extends State<MyHomePage> {
   TextEditingController _textFieldController = TextEditingController();
   List validationWords = [];
   List modifiedWords = [];
-  List _ratings= [];
+  List _ratings = [];
   var taskId;
   int domainId;
   int taskNumber;
@@ -59,7 +37,8 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  String _text =
+      'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
@@ -71,9 +50,7 @@ class _MyHomePageState extends State<MyHomePage> {
     startDate = startDate.replaceAll(' ', 'T') + '.000Z';
   }
 
-
-
-  _showValidation() async{
+  _showValidation() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     domainId = prefs.getInt("gid");
     taskNumber = prefs.getInt("taskNum");
@@ -85,9 +62,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  _processValidations(res) async{
+  _processValidations(res) async {
     try {
-      if(res['statusCode']==0){
+      if (res['statusCode'] == 0) {
         gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
             'эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
       } else {
@@ -100,8 +77,8 @@ class _MyHomePageState extends State<MyHomePage> {
         language = codes;
         print("Validation words:");
         print(res['task']['synset']);
-        for(var i in validationWords){
-          if(i['languageCode']==_value){
+        for (var i in validationWords) {
+          if (i['languageCode'] == _value) {
             lemma = i['lemma'];
             gloss = i['gloss'];
           }
@@ -113,9 +90,9 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void _onChanged(String value){
-    for(var item in validationWords){
-      if(item['languageCode']==value){
+  void _onChanged(String value) {
+    for (var item in validationWords) {
+      if (item['languageCode'] == value) {
         lemma = item['lemma'];
         gloss = item['gloss'];
       }
@@ -125,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void dispose(){
+  void dispose() {
     super.dispose();
   }
 
@@ -134,22 +111,23 @@ class _MyHomePageState extends State<MyHomePage> {
     print(modifiedWords);
     return Scaffold(
       appBar: AppBar(
-          title: Text(widget.title),
 //          bottom: ,
+          title: Text(
+            "Үнэлэх",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () {
-              _taskType(3);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TaskApp()),
-              );
-            }
-          )),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                _taskType(3);
+                Navigator.pushNamed(context, '/task');
+              })),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
@@ -167,23 +145,24 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: DropdownButton(
                 value: _value,
-                items: _values.where((x){
+                items: _values.where((x) {
                   return language.contains(x['code']);
-                }).map((value){
+                }).map((value) {
                   return new DropdownMenuItem(
                     value: value['code'],
                     child: new Row(
                       children: <Widget>[
 //                        new Icon(Icons.language),
-                        _langIcon(value['code'].toString()),
+                        LangIcon(value['code'].toString()),
+//                        _langIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
                   );
                 }).toList(),
-                onChanged: (value){
+                onChanged: (value) {
                   _onChanged(value);
-                  },
+                },
               ),
             ),
             Padding(
@@ -191,14 +170,20 @@ class _MyHomePageState extends State<MyHomePage> {
               child: new Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: <Widget>[
-                  Text(lemma.toLowerCase(), style: TextStyle(
-                    fontSize: 17.0,
-                    fontWeight: FontWeight.bold,),
+                  Text(
+                    lemma.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text(gloss.toLowerCase(), style: TextStyle(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.bold,
-                  ),),
+                  Text(
+                    gloss.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -211,53 +196,74 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Row(
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(left: 5.0),
-                  child: new FlatButton(
-                    onPressed: () => _showDialog(context),
-                    padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text("GAP", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.event_busy, color: Colors.indigo,)
-                      ],
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 5.0),
+                    child: new FlatButton(
+                      onPressed: () => _showDialog(context),
+                      padding: EdgeInsets.all(10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "GAP",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                          Icon(
+                            Icons.event_busy,
+                            color: Colors.indigo,
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
-
-                Padding(
-                  padding: EdgeInsets.only(left: 55.0),
-                  child: new  FlatButton(
-                    onPressed: _skipButton,
-                    padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text("Алгасах", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.skip_next, color: Colors.indigo,)
-                      ],
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 55.0),
+                    child: new FlatButton(
+                      onPressed: _skipButton,
+                      padding: EdgeInsets.all(10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "Алгасах",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-
-                Padding(
-                  padding: EdgeInsets.only(left: 10.0, right: 5.0),
-                  child: new FlatButton(
-                    onPressed: (){
-                        if(_ratings.length==0){
-                          Fluttertoast.showToast(msg: "Илгээх өгөгдөл байхгүй байна.");
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10.0, right: 5.0),
+                    child: new FlatButton(
+                      onPressed: () {
+                        if (_ratings.length == 0) {
+                          Fluttertoast.showToast(
+                              msg: "Илгээх өгөгдөл байхгүй байна.");
                         } else {
                           _sendButton();
                         }
-                    },
-                    padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text("Илгээх", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.send, color: Colors.indigo,)
-                      ],
+                      },
+                      padding: EdgeInsets.all(10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "Илгээх",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
+                )
               ],
             ),
           ],
@@ -265,9 +271,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-  _taskType(int t) async{
+
+  _taskType(int t) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt("taskNum", t );
+    prefs.setInt("taskNum", t);
   }
 
   _showDialog(BuildContext context) async {
@@ -288,7 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
             actions: <Widget>[
               new FlatButton(
                 child: new Text('OK'),
-                onPressed: () async{
+                onPressed: () async {
                   var validationsGap = [];
                   validationsGap.add({
                     'words': "GAP",
@@ -332,13 +339,13 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  void something(int e){
-    setState((){
-      if(e == 0){
+  void something(int e) {
+    setState(() {
+      if (e == 0) {
         radioValue = 0;
-      } else if (e == 1){
+      } else if (e == 1) {
         radioValue = 1;
-      } else if (e == 2){
+      } else if (e == 2) {
         radioValue = 2;
       }
     });
@@ -346,34 +353,35 @@ class _MyHomePageState extends State<MyHomePage> {
 
   _validateWords(BuildContext context) {
     var children = <Widget>[];
-    for (var i=0; i < modifiedWords.length; i++) {
+    for (var i = 0; i < modifiedWords.length; i++) {
       var controller = new TextEditingController();
       controller.text = modifiedWords[i]['word'];
       children.add(Column(
         children: <Widget>[
-         Padding(
-              padding: EdgeInsets.only(left: 30.0, right: 30.0),
-              child: new TextField(
-                enabled: false,
-                decoration: InputDecoration(
-                  hintStyle: TextStyle(color: Colors.grey),
-                  border: new OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(5.0),
-                  ),
-                  ),
-                controller: controller,
-              ),
-            ),
           Padding(
-            padding: EdgeInsets.only(left: 30.0, right: 30.0),
+            padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
+            child: new TextField(
+              enabled: false,
+              decoration: InputDecoration(
+                hintStyle: TextStyle(color: Colors.grey),
+                border: new OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(5.0),
+                ),
+              ),
+              controller: controller,
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
             child: Row(
               children: <Widget>[
                 Padding(
-                  padding: EdgeInsets.all(5.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 5.0, horizontal: 20.0),
                   child: Row(
                     children: <Widget>[
                       new Radio(
-                        onChanged: (value){
+                        onChanged: (value) {
                           setState(() {
 //                            correct[i] = value;
                             _ratings[i] = value;
@@ -391,11 +399,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(5.0),
-                  child:  Row(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  child: Row(
                     children: <Widget>[
                       new Radio(
-                        onChanged: (value ) {
+                        onChanged: (value) {
                           setState(() {
                             //wrong[i] = value;
                             _ratings[i] = value;
@@ -413,11 +422,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.all(5.0),
+                  padding:
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                   child: Row(
                     children: <Widget>[
                       new Radio(
-                        onChanged: (value ) {
+                        onChanged: (value) {
                           setState(() {
                             //unfamiliar[i] = value;
                             _ratings[i] = value;
@@ -444,7 +454,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return children;
   }
 
-  _sendButton() async{
+  _sendButton() async {
     var validationWords = [];
     for (var i = 0; i < modifiedWords.length; i++) {
       validationWords.add({
@@ -453,18 +463,18 @@ class _MyHomePageState extends State<MyHomePage> {
       });
     }
 
-      DateTime now = DateTime.now();
-      endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
-      endDate = endDate.replaceAll(' ', 'T') + '.000Z';
+    DateTime now = DateTime.now();
+    endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-      Map obj = {
-        'taskId': "${taskId}",
-        'domainId': "${domainId}",
-        'start_date': "${startDate}",
-        'end_date': "${endDate}",
-        'validations': validationWords,
-      };
-      print(obj);
+    Map obj = {
+      'taskId': "${taskId}",
+      'domainId': "${domainId}",
+      'start_date': "${startDate}",
+      'end_date': "${endDate}",
+      'validations': validationWords,
+    };
+    print(obj);
     var _body = jsonEncode(obj);
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
@@ -478,7 +488,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
 
-      client.get('http://lkc.num.edu.mn/task/3/' + domainId.toString(), headers: {
+      client
+          .get('http://lkc.num.edu.mn/task/3/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
@@ -497,14 +508,15 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     });
-    }
+  }
 
-  _skipButton() async{
+  _skipButton() async {
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
 
-    var _body = '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
+    var _body =
+        '{ "taskId": "${taskId}", "domainId": "${domainId}", "start_date": "${startDate}",'
         ' "end_date": "${endDate}", "skip": true }';
     var prefs = await SharedPreferences.getInstance();
     var token = prefs.getString('token');
@@ -538,21 +550,5 @@ class _MyHomePageState extends State<MyHomePage> {
         ));
       }
     });
-  }
-}
-
-_langIcon(String value) {
-  if(value=='eng'){
-    return new Image(image: new AssetImage('images/united-kingdom.png'), width: 25, height: 25,);
-  } else if(value=='zho'){
-    return new Image(image: new AssetImage('images/china.png'), width: 25, height: 25,);
-  } else if(value=='deu'){
-    return new Image(image: new AssetImage('images/germany.png'), width: 25, height: 25,);
-  } else if(value=='fra'){
-    return new Image(image: new AssetImage('images/france.png'), width: 25, height: 25,);
-  } else if(value=='rus'){
-    return new Image(image: new AssetImage('images/russia.png'), width: 25, height: 25,);
-  } else if(value=='jpn'){
-    return new Image(image: new AssetImage('images/japan.png'), width: 25, height: 25,);
   }
 }

@@ -5,37 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 import 'package:lkc/networklayer.dart';
-import 'package:lkc/performance.dart';
-import 'package:lkc/task.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
+import 'chooselanguage.dart';
 
 //Засварлах
-void main() => runApp(RearrangeApp());
-
-class RearrangeApp extends StatelessWidget {
-  // This widget is the root of your application.
+class RearrangeApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Нүүр хэсэг',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Засварлах'),
-    );
-  }
+  _RearrangeAppState createState() => _RearrangeAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _RearrangeAppState extends State<RearrangeApp> {
   List<TextEditingController> _controllers = [];
   List<TextEditingController> _controllerModified = [];
   TextEditingController _textFieldController = TextEditingController();
@@ -60,7 +40,8 @@ class _MyHomePageState extends State<MyHomePage> {
     {'code': 'jpn', 'label': 'Japanese'},
   ];
 
-  String _text = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
+  String _text =
+      'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй эсвэл бүх даалгаврууд хийгдэж дууссан байна. Өөр айд шилжинэ үү.';
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
@@ -71,10 +52,9 @@ class _MyHomePageState extends State<MyHomePage> {
     startDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     startDate = startDate.replaceAll(' ', 'T') + '.000Z';
     _setControllers();
-
   }
 
-  _setControllers(){
+  _setControllers() {
     setState(() {
       _controllers.add(new TextEditingController());
       _controllerModified.add(new TextEditingController());
@@ -99,9 +79,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void _processModifications(res) async{
-    try{
-      if (res['statusCode']==0){
+  void _processModifications(res) async {
+    try {
+      if (res['statusCode'] == 0) {
         gloss = 'Энэ айд зориулж ямар нэг даалгавар генераци хийгээгүй '
             'эсвэл бүх даалгаврууд хийгдэж дууссан байна.'
             ' Өөр айд шилжинэ үү.';
@@ -116,27 +96,27 @@ class _MyHomePageState extends State<MyHomePage> {
         print("Modification words:");
         print(res['task']['synset']);
 
-        for(var i in rearrangeWords) {
-          if(i['languageCode']==_value){
+        for (var i in rearrangeWords) {
+          if (i['languageCode'] == _value) {
             lemma = i['lemma'];
             gloss = i['gloss'];
           }
         }
 
-        for(var i = 0; i < translatedWords.length; i++) {
-          _controllers.add(TextEditingController(text: translatedWords[i]['word']));
+        for (var i = 0; i < translatedWords.length; i++) {
+          _controllers
+              .add(TextEditingController(text: translatedWords[i]['word']));
           _controllerModified.add(new TextEditingController());
         }
       }
-    } catch(e){
+    } catch (e) {
       print(e);
     }
-
   }
 
-  void _onChanged(String value){
-    for(var item in rearrangeWords){
-      if(item['languageCode']==value){
+  void _onChanged(String value) {
+    for (var item in rearrangeWords) {
+      if (item['languageCode'] == value) {
         lemma = item['lemma'];
         gloss = item['gloss'];
       }
@@ -152,22 +132,22 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(
+            "Засварлах",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: (){
-              _taskType(2);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => TaskApp()),
-              );
-            }
-          )
-      ),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () {
+                _taskType(2);
+                Navigator.pushNamed(context, '/task');
+              })),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Padding(
@@ -185,14 +165,14 @@ class _MyHomePageState extends State<MyHomePage> {
             Center(
               child: DropdownButton(
                 value: _value,
-                items: _values.where((x){
+                items: _values.where((x) {
                   return language.contains(x['code']);
-                }).map((value){
+                }).map((value) {
                   return new DropdownMenuItem(
                     value: value['code'],
                     child: new Row(
                       children: <Widget>[
-                        _langIcon(value['code'].toString()),
+                        LangIcon(value['code'].toString()),
                         new Text('  ${value['label']}'),
                       ],
                     ),
@@ -204,19 +184,25 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(20.0),
+              padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
               child: new Column(
-                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: <Widget>[
-                  Text(lemma.toLowerCase(), style: TextStyle(
-                    fontSize: 17.0,
-                    fontWeight: FontWeight.bold,
+                  Text(
+                    lemma.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 17.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
+                  Text(
+                    gloss.toLowerCase(),
+                    style: TextStyle(
+                      fontSize: 12.0,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  Text(gloss.toLowerCase(), style: TextStyle(
-                    fontSize: 12.0,
-                    fontWeight: FontWeight.bold,
-                  ),),
                 ],
               ),
             ),
@@ -231,44 +217,62 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             Row(
               children: <Widget>[
-                Padding(
-                  padding: EdgeInsets.only(left: 5.0),
-                  child: new FlatButton(
-                    onPressed: () => _showDialog(context),
-                    padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text("GAP", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.event_busy, color: Colors.indigo,)
-                      ],
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 5.0),
+                    child: new FlatButton(
+                      onPressed: () => _showDialog(context),
+                      padding: EdgeInsets.all(10.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "GAP",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                          Icon(
+                            Icons.event_busy,
+                            color: Colors.indigo,
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
-
-                Padding(
-                  padding: EdgeInsets.only(left: 55.0),
-                  child: new  FlatButton(
-                    onPressed: _skipButton,
-                    padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text("Алгасах", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.skip_next, color: Colors.indigo,)
-                      ],
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 55.0),
+                    child: new FlatButton(
+                      onPressed: _skipButton,
+                      padding: EdgeInsets.all(10.0),
+                      child: Row(
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "Алгасах",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-
-                Padding(
-                  padding: EdgeInsets.only(left: 10.0, right: 5.0),
-                  child: new FlatButton(
-                    onPressed: _sendButton,
-                    padding: EdgeInsets.all(10.0),
-                    child: Row( // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text("Илгээх", style: TextStyle(color: Colors.indigo),),
-                        Icon(Icons.send, color: Colors.indigo,)
-                      ],
+                Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(left: 10.0, right: 5.0),
+                    child: new FlatButton(
+                      onPressed: _sendButton,
+                      padding: EdgeInsets.all(10.0),
+                      child: Row(
+                        // Replace with a Row for horizontal icon + text
+                        children: <Widget>[
+                          Text(
+                            "Илгээх",
+                            style: TextStyle(color: Colors.indigo),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -279,9 +283,10 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-  _taskType(int t) async{
+
+  _taskType(int t) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setInt("taskNum", t );
+    prefs.setInt("taskNum", t);
   }
 
   _showDialog(BuildContext context) async {
@@ -289,15 +294,20 @@ class _MyHomePageState extends State<MyHomePage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('GAP (дүйцэлгүй ойлголт)', style: TextStyle(color: Colors.indigo, fontSize: 15.0),),
+            title: Text(
+              'GAP (дүйцэлгүй ойлголт)',
+              style: TextStyle(color: Colors.indigo, fontSize: 15.0),
+            ),
             content: TextField(
               controller: _textFieldController,
-              decoration: InputDecoration(hintText: "GAP гэж үзсэн шалтгаан?", hintStyle: TextStyle(fontSize: 15.0)),
+              decoration: InputDecoration(
+                  hintText: "GAP гэж үзсэн шалтгаан?",
+                  hintStyle: TextStyle(fontSize: 15.0)),
             ),
             actions: <Widget>[
               new FlatButton(
                 child: new Text('OK'),
-                onPressed: () async{
+                onPressed: () async {
                   var modificationGap = [];
                   modificationGap.add({
                     'preWord': "GAP",
@@ -332,18 +342,18 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               new FlatButton(
                 child: new Text('CANCEL'),
-                onPressed: (){
+                onPressed: () {
                   Navigator.pop(context);
                 },
               )
-
             ],
           );
         });
   }
+
   _buildWords(BuildContext context) {
     var children = <Widget>[];
-    for (var i=0; i < translatedWords.length; i++) {
+    for (var i = 0; i < translatedWords.length; i++) {
       var controller = new TextEditingController();
       var controllerModified = _controllerModified[i];
       controller.text = translatedWords[i]['word'];
@@ -361,31 +371,30 @@ class _MyHomePageState extends State<MyHomePage> {
               controller: controller,
             ),
           ),
-
           Row(
             children: <Widget>[
               Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(left: 20.0, right: 20.0),
-                    child: new TextField(
-                      decoration: InputDecoration(
-                        suffix:  IconButton(
-                          icon: Icon(Icons.spellcheck),
-                          onPressed: (){
-                            print('spellcheck pressed');
-                            print(controllerModified.text = translatedWords[i]['word']);
-                            controllerModified.text = translatedWords[i]['word'];
-                          },
-                        ),
-                        fillColor: Colors.blueAccent,
-                        labelText: '',
-                        hintText: 'Засвар үг',
-                        hintStyle: TextStyle(color: Colors.grey),
-                      ),
-                      controller: controllerModified,
+                padding: EdgeInsets.only(left: 20.0, right: 20.0),
+                child: new TextField(
+                  decoration: InputDecoration(
+                    suffix: IconButton(
+                      icon: Icon(Icons.spellcheck),
+                      onPressed: () {
+                        print('spellcheck pressed');
+                        print(controllerModified.text =
+                            translatedWords[i]['word']);
+                        controllerModified.text = translatedWords[i]['word'];
+                      },
                     ),
-                  )
-              ),
+                    fillColor: Colors.blueAccent,
+                    labelText: '',
+                    hintText: 'Засвар үг',
+                    hintStyle: TextStyle(color: Colors.grey),
+                  ),
+                  controller: controllerModified,
+                ),
+              )),
               IconButton(
                 padding: EdgeInsets.only(left: 20.0, right: 20),
                 color: Colors.red,
@@ -407,7 +416,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return children;
   }
 
-  _sendButton() async{
+  _sendButton() async {
     var modificationWords = [];
     for (var i = 0; i < translatedWords.length; i++) {
       modificationWords.add({
@@ -440,7 +449,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
       Fluttertoast.showToast(msg: "Амжилттай илгээлээ!");
-      client.get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
+      client
+          .get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
@@ -463,7 +473,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  _skipButton() async{
+  _skipButton() async {
     DateTime now = DateTime.now();
     endDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
     endDate = endDate.replaceAll(' ', 'T') + '.000Z';
@@ -486,7 +496,8 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Response status: ${response.statusCode}");
       print("Response body: ${response.body}");
 
-      client.get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
+      client
+          .get('http://lkc.num.edu.mn/task/2/' + domainId.toString(), headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json, text/plain, */*',
         'Authorization': token,
@@ -505,23 +516,5 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       });
     });
-
   }
 }
-
-_langIcon(String value) {
-  if(value=='eng'){
-    return new Image(image: new AssetImage('images/united-kingdom.png'), width: 25, height: 25,);
-  } else if(value=='zho'){
-    return new Image(image: new AssetImage('images/china.png'), width: 25, height: 25,);
-  } else if(value=='deu'){
-    return new Image(image: new AssetImage('images/germany.png'), width: 25, height: 25,);
-  } else if(value=='fra'){
-    return new Image(image: new AssetImage('images/france.png'), width: 25, height: 25,);
-  } else if(value=='rus'){
-    return new Image(image: new AssetImage('images/russia.png'), width: 25, height: 25,);
-  } else if(value=='jpn'){
-    return new Image(image: new AssetImage('images/japan.png'), width: 25, height: 25,);
-  }
-}
-

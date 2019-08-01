@@ -1,1 +1,0 @@
-List<String> languages = ['en', 'mn'];

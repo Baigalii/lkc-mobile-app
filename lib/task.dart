@@ -1,43 +1,13 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:lkc/allocate.dart';
-import 'package:lkc/modify.dart';
 import 'package:lkc/networklayer.dart';
-import 'package:lkc/rearrange.dart';
-import 'package:lkc/performance.dart';
-import 'package:lkc/sort.dart';
-import 'package:lkc/translate.dart';
-import 'package:lkc/validate.dart';
-import 'package:path/path.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
 
-
-void main() => runApp(new TaskApp());
-
-class TaskApp extends StatelessWidget {
-
-  const TaskApp({Key key}) : super(key: key);
+class TaskApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ), //ThemeData
-      home: HomePage(),
-    );
-  }
+  _TaskAppState createState() => _TaskAppState();
 }
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage>
-    with SingleTickerProviderStateMixin {
+class _TaskAppState extends State<TaskApp> with SingleTickerProviderStateMixin {
   TabController tabController;
   int currentPage;
   List synsetData = [];
@@ -52,7 +22,7 @@ class _HomePageState extends State<HomePage>
   ];
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
     tabController = new TabController(length: 6, vsync: this);
     _taskNumber();
@@ -61,94 +31,21 @@ class _HomePageState extends State<HomePage>
   void _taskNumber() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     int type = prefs.getInt("taskNum");
-//    if(type==1){
-      print("task ${type} ruu orloo");
-      fetchTask(type).then((res) {
-        setState(() {
-          synsetData = res;
-          print("synset length:");
-          print(synsetData.length);
-          synsetData = synsetData.map((synset) {
-            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-              return _x['languageCode'];
-            }).toList();
-            return synset;
+    print("task ${type} ruu orloo");
+    fetchTask(type).then((res) {
+      setState(() {
+        synsetData = res;
+        print("synset length:");
+        print(synsetData.length);
+        synsetData = synsetData.map((synset) {
+          synset['languageCodes'] = (synset['synset'] as List).map((_x) {
+            return _x['languageCode'];
           }).toList();
-          loading = false;
-        });
+          return synset;
+        }).toList();
+        loading = false;
       });
-//    }
-//    else if(type == 2){
-//      print("task2 luu orloo");
-//      fetchTask(1).then((res) {
-//        setState(() {
-//          synsetData = res;
-//          synsetData = synsetData.map((synset) {
-//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-//              return _x['languageCode'];
-//            }).toList();
-//            return synset;
-//          }).toList();
-//          loading = false;
-//        });
-//      });
-//    } else if(type == 3){
-//      print("task3 luu orloo");
-//      fetchTask(3).then((res) {
-//        setState(() {
-//          synsetData = res;
-//          synsetData = synsetData.map((synset) {
-//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-//              return _x['languageCode'];
-//            }).toList();
-//            return synset;
-//          }).toList();
-//          loading = false;
-//        });
-//      });
-//    } else if(type == 4){
-//      print("task4 luu orloo");
-//      fetchTask(4).then((res) {
-//        setState(() {
-//          synsetData = res;
-//          synsetData = synsetData.map((synset) {
-//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-//              return _x['languageCode'];
-//            }).toList();
-//            return synset;
-//          }).toList();
-//          loading = false;
-//        });
-//      });
-//    } else if(type == 5){
-//      print("task5 luu orloo");
-//      fetchTask(5).then((res) {
-//        setState(() {
-//          synsetData = res;
-//          synsetData = synsetData.map((synset) {
-//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-//              return _x['languageCode'];
-//            }).toList();
-//            return synset;
-//          }).toList();
-//          loading = false;
-//        });
-//      });
-//    } else if(type ==6){
-//      print("task6 luu orloo");
-//      fetchTask(6).then((res) {
-//        setState(() {
-//          synsetData = res;
-//          synsetData = synsetData.map((synset) {
-//            synset['languageCodes'] = (synset['synset'] as List).map((_x) {
-//              return _x['languageCode'];
-//            }).toList();
-//            return synset;
-//          }).toList();
-//          loading = false;
-//        });
-//      });
-//    }
+    });
   }
 
   @override
@@ -161,14 +58,15 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-          title: new Text('Нутагшуулах'),
+          title: Text(
+            "Нутагшуулах",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => PerformanceApp()),
-                ),
-          )),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pushNamed(context, '/performance'))),
       body: _buildBody(context),
       bottomNavigationBar: new Material(
         color: Colors.indigo,
@@ -261,18 +159,18 @@ class WordGridView extends StatelessWidget {
               print(gid);
               print("task id:");
               print(taskId);
-              if(type==1){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => AllocateApp()));
-              } else if(type==2){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => RearrangeApp()));
-              } else if(type==3){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ValidateApp()));
-              } else if(type==4){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => TranslateApp()));
-              } else if(type==5){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ModifyApp()));
-              } else if(type==6){
-                Navigator.push(context, MaterialPageRoute(builder: (context) => SortApp()));
+              if (type == 1) {
+                Navigator.pushNamed(context, '/allocate');
+              } else if (type == 2) {
+                Navigator.pushNamed(context, '/rearrange');
+              } else if (type == 3) {
+                Navigator.pushNamed(context, '/validate');
+              } else if (type == 4) {
+                Navigator.pushNamed(context, '/translate');
+              } else if (type == 5) {
+                Navigator.pushNamed(context, '/modify');
+              } else if (type == 6) {
+                Navigator.pushNamed(context, '/sort');
               }
             }
           },
@@ -289,7 +187,8 @@ class WordGridView extends StatelessWidget {
                   child: new Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      new Text(lemma ?? '-',
+                      new Text(
+                        lemma ?? '-',
                         style: TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 15.0),
                       ),

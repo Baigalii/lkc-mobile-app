@@ -1,46 +1,18 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:lkc/login.dart';
 import 'package:lkc/networklayer.dart';
-import 'package:lkc/task.dart';
-import 'package:http/http.dart' as http;
-import 'package:rich_alert/rich_alert.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-void main() => runApp(PerformanceApp());
-
-class PerformanceApp extends StatelessWidget {
-  // This widget is the root of your application.
+class PerformanceApp extends StatefulWidget {
   @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Task',
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-      ),
-      home: MyHomePage(title: 'Оролцох'),
-    );
-  }
+  _PerformanceAppState createState() => _PerformanceAppState();
 }
 
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title, this.type}) : super(key: key);
-  final String title;
-  final int type;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
+class _PerformanceAppState extends State<PerformanceApp> {
   var respPro, respPer;
   var respTask1;
   var uname, email;
   List result = [];
-  var translation , validation , modification;
-
-
+  var translation, validation, modification;
 
   @override
   void initState() {
@@ -89,14 +61,15 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
-          title: Text(widget.title),
+          title: Text(
+            "Даалгавар",
+            style: TextStyle(color: Colors.white, fontSize: 20.0),
+            textAlign: TextAlign.center,
+          ),
+          centerTitle: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
-            onPressed: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginApp()),
-                ),
-          )),
+              icon: Icon(Icons.arrow_back),
+              onPressed: () => Navigator.pushNamed(context, '/'))),
       body: new SingleChildScrollView(
         child: new Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -105,13 +78,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(5.0),
               child: new InkWell(
-                onTap: (){
+                onTap: () {
                   _taskType(1);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TaskApp()),
-                  );
+                  Navigator.pushNamed(context, '/task');
                 },
                 child: new Column(
                   children: <Widget>[
@@ -131,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
                     ),
                     Center(
-                      child:  new Container(
+                      child: new Container(
                         decoration: BoxDecoration(
                           color: Colors.orange,
                         ),
@@ -155,13 +124,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(5.0),
               child: new InkWell(
-                onTap: (){
+                onTap: () {
                   _taskType(2);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TaskApp()),
-                  );
+                  Navigator.pushNamed(context, '/task');
                 },
                 child: new Column(
                   children: <Widget>[
@@ -202,13 +167,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(5.0),
               child: new InkWell(
-                onTap: (){
+                onTap: () {
                   _taskType(3);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TaskApp()),
-                  );
+                  Navigator.pushNamed(context, '/task');
                 },
                 child: new Column(
                   children: <Widget>[
@@ -249,13 +210,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(5.0),
               child: new InkWell(
-                onTap: (){
+                onTap: () {
                   _taskType(4);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TaskApp()),
-                  );
+                  Navigator.pushNamed(context, '/task');
                 },
                 child: new Column(
                   children: <Widget>[
@@ -297,13 +254,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(5.0),
               child: new InkWell(
-                onTap: (){
+                onTap: () {
                   _taskType(5);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TaskApp()),
-                  );
+                  Navigator.pushNamed(context, '/task');
                 },
                 child: new Column(
                   children: <Widget>[
@@ -345,13 +298,9 @@ class _MyHomePageState extends State<MyHomePage> {
             Padding(
               padding: EdgeInsets.all(5.0),
               child: new InkWell(
-                onTap: (){
+                onTap: () {
                   _taskType(6);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => TaskApp()),
-                  );
+                  Navigator.pushNamed(context, '/task');
                 },
                 child: new Column(
                   children: <Widget>[
@@ -399,25 +348,30 @@ class _MyHomePageState extends State<MyHomePage> {
         profileImg: "images/woman_avatar.png",
         background: "images/participation.png",
         translation: translation,
-            validation: validation,
-              modification: modification,
-      )
-      ),
+        validation: validation,
+        modification: modification,
+      )),
     );
   }
 
-   _taskType(int t) async{
-     SharedPreferences prefs = await SharedPreferences.getInstance();
-     prefs.setInt("taskNum", t );
-   }
+  _taskType(int t) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setInt("taskNum", t);
+  }
 }
-
 
 class my_drawer extends StatelessWidget {
   String email, uname, profileImg, background;
   int translation, validation, modification;
 
-  my_drawer({this.email, this.uname, this.background, this.profileImg, this.translation, this.validation, this.modification});
+  my_drawer(
+      {this.email,
+      this.uname,
+      this.background,
+      this.profileImg,
+      this.translation,
+      this.validation,
+      this.modification});
 
   @override
   Widget build(BuildContext context) {
@@ -460,12 +414,8 @@ class my_drawer extends StatelessWidget {
         new ListTile(
           title: new Text('Гарах '),
           trailing: new Icon(Icons.exit_to_app),
-          onTap: (){
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => LoginApp()),
-            );
+          onTap: () {
+            Navigator.pushNamed(context, '/');
           },
         ),
       ],
