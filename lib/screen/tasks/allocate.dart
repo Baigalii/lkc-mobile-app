@@ -222,86 +222,120 @@ class _AllocateAppState extends State<AllocateApp>
             Divider(
               height: 25.0,
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Expanded(
-                  child: FlatButton(
-                    color: Colors.indigo,
-                    onPressed: () => Navigator.pushNamed(context, '/previous'),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
-                          "Өмнөх",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: FlatButton(
-                    color: Colors.indigo,
-                    onPressed: _skipButton,
-                    //padding: EdgeInsets.all(10.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      // Replace with a Row for horizontal icon + text
-                      children: <Widget>[
-                        Text(
-                          "Алгасах",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Flexible(
-                  child: Center(
-                    child: FlatButton(
-                      color: Colors.indigo,
-                      onPressed: () => _showDialog(context),
-                      splashColor: Colors.indigo,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        // Replace with a Row for horizontal icon + text
-                        children: <Widget>[
-                          Text(
-                            "GAP",
-                            style: TextStyle(color: Colors.white),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        child: RaisedButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(20.0),
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Flexible(
-                  child: Center(
-                    child: FlatButton(
-                      color: Colors.indigo,
-                      onPressed: _sendButton,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        // Replace with a Row for horizontal icon + text
-                        children: <Widget>[
-                          Text(
-                            "Илгээх",
-                            style: TextStyle(color: Colors.white),
+                          color: Colors.grey[300],
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/previous'),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            // Replace with a Row for horizontal icon + text
+                            children: <Widget>[
+                              Text(
+                                "Өмнөх",
+                                style: TextStyle(color: Colors.indigo),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                        ),
+                      )),
+                  Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 5.0),
+                        child: RaisedButton(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: new BorderRadius.circular(20.0),
+                          ),
+                          color: Colors.grey[300],
+                          onPressed: _skipButton,
+                          //padding: EdgeInsets.all(10.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            // Replace with a Row for horizontal icon + text
+                            children: <Widget>[
+                              Text(
+                                "Алгасах",
+                                style: TextStyle(color: Colors.indigo),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )),
+                ],
+              ),
             ),
+            Padding(
+              padding: EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Expanded(
+                    flex: 2,
+                    child: Center(
+                        child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 5.0),
+                      child: FlatButton(
+                        color: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0)),
+                        onPressed: () => _showDialog(context),
+                        splashColor: Colors.indigo,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          // Replace with a Row for horizontal icon + text
+                          children: <Widget>[
+                            Text(
+                              "GAP",
+                              style: TextStyle(color: Colors.indigo),
+                            ),
+                            Icon(
+                              Icons.event_busy,
+                              color: Colors.indigo,
+                            )
+                          ],
+                        ),
+                      ),
+                    )),
+                  ),
+                  Expanded(
+                    flex: 2,
+                    child: Center(
+                        child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 5.0),
+                      child: RaisedButton(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: new BorderRadius.circular(20.0),
+                        ),
+                        color: Colors.indigo,
+                        onPressed: _sendButton,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          // Replace with a Row for horizontal icon + text
+                          children: <Widget>[
+                            Text(
+                              "Илгээх",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
       ),

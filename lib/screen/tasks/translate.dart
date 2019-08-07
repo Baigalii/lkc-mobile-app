@@ -245,9 +245,12 @@ class _TranslateAppState extends State<TranslateApp> {
                 children: <Widget>[
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 20.0),
-                      child: new FlatButton(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                      child: FlatButton(
+                        color: Colors.grey[300],
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20.0)),
                         onPressed: _skipButton,
                         child: Text(
                           "Алгасах",
@@ -259,8 +262,11 @@ class _TranslateAppState extends State<TranslateApp> {
                   Expanded(
                       child: Padding(
                     padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                    child: new FlatButton(
+                        EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+                    child: FlatButton(
+                      color: Colors.indigo,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20.0)),
                       onPressed: () {
                         if (controller.text == " ") {
                           Fluttertoast.showToast(
@@ -271,7 +277,7 @@ class _TranslateAppState extends State<TranslateApp> {
                       },
                       child: Text(
                         "Илгээх",
-                        style: TextStyle(color: Colors.indigo),
+                        style: TextStyle(color: Colors.white),
                       ),
                     ),
                   )),

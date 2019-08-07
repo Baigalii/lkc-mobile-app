@@ -218,27 +218,35 @@ class _ModifyAppState extends State<ModifyApp> {
             Row(
               children: <Widget>[
                 Expanded(
-                  child: new FlatButton(
+                    child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: FlatButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0)),
+                    color: Colors.grey[300],
                     onPressed: _skipButton,
-                    padding:
-                        EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                     child: Text(
                       " Алгасах",
                       style: TextStyle(color: Colors.indigo),
                     ),
                   ),
-                ),
+                )),
                 Expanded(
-                  child: new FlatButton(
+                    child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: FlatButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0)),
+                    color: Colors.indigo,
                     onPressed: _sendButton,
                     padding:
                         EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
                     child: Text(
                       " Илгээх ",
-                      style: TextStyle(color: Colors.indigo),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                ),
+                )),
               ],
             ),
           ],

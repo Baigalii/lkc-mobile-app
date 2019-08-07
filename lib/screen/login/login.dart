@@ -178,7 +178,7 @@ class _LoginAppState extends State<LoginApp> {
                               children: <Widget>[
                                 new InkWell(
                                   child: Padding(
-                                    child: new Text('Нууц үгээ мартсан уу?'),
+                                    child: new Text('Нууц үгээ мартсан?'),
                                     padding: EdgeInsets.only(top: 10.0),
                                   ),
                                   onTap: () {

@@ -221,8 +221,11 @@ class _SortAppState extends State<SortApp> {
               Expanded(
                 child: Padding(
                   padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                  child: new FlatButton(
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                  child: FlatButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0)),
+                    color: Colors.grey[300],
                     onPressed: _skipButton,
                     child: Text(
                       "Алгасах",
@@ -234,12 +237,15 @@ class _SortAppState extends State<SortApp> {
               Expanded(
                 child: Padding(
                   padding:
-                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-                  child: new FlatButton(
+                      EdgeInsets.symmetric(vertical: 10.0, horizontal: 10.0),
+                  child: FlatButton(
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20.0)),
+                    color: Colors.indigo,
                     onPressed: _sendButton,
                     child: Text(
                       "Илгээх",
-                      style: TextStyle(color: Colors.indigo),
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
                 ),
